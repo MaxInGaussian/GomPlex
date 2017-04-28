@@ -63,7 +63,7 @@ To install GomPlex, clone this repo:
    
 # Try GomPlex with Only 3 Lines of Code
 ```python
-import GomPlex
+from GomPlex import *
 # <>: necessary inputs, {}: optional inputs
 gp = GomPlex(<sparsity>)
 gp.fit(<X>, <y>, {opt_rate}, {max_iter}, {iter_tol}, {nlml_tol})
