@@ -77,7 +77,7 @@ gp.fit(X, y, plot=True)
 ```
 ![Plot1DFunction](demo_regression_real_imag.png?raw=true "Plot 1D Function")
    
-#License
+# License
 Copyright (c) 2016, Max W. Y. Lam
 All rights reserved.
 

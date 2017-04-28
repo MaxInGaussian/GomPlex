@@ -24,7 +24,8 @@ class GomPlex(object):
     def __str__(self):
         return "GomPlex-%d" % (self.M)
     
-    def fit(self, X, y, opt_rate=1, max_iter=1000, iter_tol=50, nlml_tol=1e-1, plot=False):
+    def fit(self, X, y,
+        opt_rate=1, max_iter=500, iter_tol=50, nlml_tol=1e-4, plot=False):
         trainer = Trainer(self, opt_rate, max_iter, iter_tol, nlml_tol)
         self.X_scaler = Scaler('minmax', X)
         self.y_scaler = Scaler('normal', y)
