@@ -1,4 +1,4 @@
-#GomPlex
+# GomPlex
 
 GomPlex is a machine learning toolkit designed for predictive modeling of
 complex-valued predictions. The key of success is to find a tailormade function
@@ -38,7 +38,7 @@ In this sence, we optimize the kernel properties without explicitly define a ker
 One significant hurdle of this approach is the explosive amount of hyperparameters,
 which in turns require careful regularization on optimization.
 
-###Highlights of GomPlex
+### Highlights of GomPlex
 
 - GomPlex optimizes
 the Fourier features so as to "learn" a tailmade covariance matrix from the data. 
