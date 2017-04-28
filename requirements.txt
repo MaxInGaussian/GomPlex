@@ -1,0 +1,8 @@
+################################################################################
+#  Github: https://github.com/MaxInGaussian/GomPlex
+#  Author: Max W. Y. Lam (maxingaussian@gmail.com)
+################################################################################
+
+numpy
+matplotlib
+tensorflow >= 0.10.0
