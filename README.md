@@ -65,15 +65,15 @@ To install GomPlex, clone this repo:
 ```python
 import GomPlex
 # <>: necessary inputs, {}: optional inputs
-gp = GomPlex(sparsity=<sparsity_of_kernel_function>)
-gp.fit(X, y, opt_rate=1, max_iter=500, iter_tol=50, nlml_tol=1e-4)
-predict_mean, predict_std = gp.predict(X_test)
+gp = GomPlex(<sparsity>)
+gp.fit(<X>, <y>, {opt_rate}, {max_iter}, {iter_tol}, {nlml_tol})
+predict_mean, predict_std = gp.predict(new_X)
 ```
 
 # Analyze Training Process on Real Time
 ## Training on One-dimensional Inputs
 ```python
-model.fit(X_train, y_train, plot=True)
+gp.fit(X, y, plot=True)
 ```
 ![Plot1DFunction](demo_regression_real_imag.png?raw=true "Plot 1D Function")
    
