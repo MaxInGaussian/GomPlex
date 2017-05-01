@@ -62,6 +62,7 @@ To install GomPlex, clone this repo:
     $ python setup.py install
 
 # Tutorial
+
 ### Try GomPlex with Only 3 Lines of Code
 ```python
 from GomPlex import *
@@ -69,11 +70,15 @@ gp = GomPlex(sparsity=30)
 gp.fit(X, y, opt_rate=1, max_iter=500, iter_tol=50, nlml_tol=1e-4)
 predict_mean, predict_std = gp.predict(new_X)
 ```
+
 ### Analyze Training Process by Real-Time Plots
 ```python
 gp.fit(X, y, plot=True)
 ```
+<img src ="tests/demo_regression_real_imag.png" />
+
 ## Toy Example: Custom 1-d Function
+
 ### True Function
 <p align="center">
 <img src ="http://www.sciweavers.org/upload/Tex2Img_1493629203/eqn.png" />
@@ -91,7 +96,6 @@ gp.fit(X, y, plot=True)
 <img src ="http://www.sciweavers.org/upload/Tex2Img_1493629286/eqn.png" />
 </p>
 <img src ="tests/demo_3d_plot_regression.png" />
-<img src ="tests/demo_regression_real_imag.png" />
 
 # License
 Copyright (c) 2016, Max W. Y. Lam
