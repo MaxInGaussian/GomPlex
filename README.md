@@ -92,7 +92,7 @@ gp.fit(X, y, plot=True)
 
 ### Complex Regression with GomPlex
 <p align="center">
-<img src ="http://www.sciweavers.org/upload/Tex2Img_1493629286/eqn.png" />
+<img src ="http://www.sciweavers.org/upload/Tex2Img_1493630490/eqn.png" />
 </p>
 <img src ="plots/toy_1d_example_regression.png" />
 
