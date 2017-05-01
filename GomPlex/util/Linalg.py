@@ -7,23 +7,23 @@ import numpy as np
 from scipy import linalg
 
 _all__ = [
-    "approxphi",
-    "interpolatephi",
+    "approx_Phi",
+    "interpolate_Phi",
     "fast_multiply",
     "fast_solve"
 ]
 
-def approxphi(W, Phi_basis):
+def approx_Phi(W, Phi_basis):
     return fast_multiply(Phi_basis, W.conj().T, True).conj().T
 
-def interpolatephi(Phi, phi_basis):
-    W_T = np.zeros((phi_basis.shape[0], Phi.shape[0]))+0j
-    H_basis = np.concatenate(([phi_basis[0]], phi_basis[1:][::-1]))
+def interpolate_Phi(Phi, phi_basis):
+    W_H = np.zeros((phi_basis.shape[0], Phi.shape[0]))+0j
+    H_basis = np.concatenate(([phi_basis[0]], phi_basis[1:][::-1])).conj()
     fft_basis = np.fft.fft(H_basis)
     Phi_basis = linalg.circulant(phi_basis)
     for i in range(Phi.shape[0]):
-        W_T[:, i] = np.fft.ifft(np.fft.fft(Phi[i, :])/fft_basis)
-    return W_T.T
+        W_H[:, i] = np.fft.ifft(np.fft.fft(Phi[i, :].conj())/fft_basis)
+    return W_H.conj().T
 
 def fast_multiply(C, X, conj_trans=False):
     CX = np.zeros((C.shape[0], X.shape[1]))+0j
