@@ -75,7 +75,11 @@ predict_mean, predict_std = gp.predict(new_X)
 ```python
 gp.fit(X, y, plot=True)
 ```
-![Plot1DFunction](demo_regression_real_imag.png?raw=true "Plot 1D Function")
+![Plot1DFunction](tests/demo_regression_real_imag.png?raw=true "Plot 1D Function")
+# 1-d Toy Example
+Given our defined true function:
+<img src="http://bit.ly/2qv0Zd6" align="center" border="0" alt="y=x\sin x+i(\sin x+x\cos x)" width="239" height="19" />
+![Plot1DFunction](tests/demo_3d_plot_true_function.png?raw=true "Plot 1D Function")
    
 # License
 Copyright (c) 2016, Max W. Y. Lam
