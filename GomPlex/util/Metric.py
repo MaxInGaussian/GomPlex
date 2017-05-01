@@ -5,6 +5,10 @@
 
 import numpy as np
 
+__all__ = [
+    "Metric"
+]
+
 class Metric(object):
     
     metrics = [

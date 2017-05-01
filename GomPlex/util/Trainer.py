@@ -5,6 +5,10 @@
 
 import numpy as np
 
+__all__ = [
+    "Trainer"
+]
+
 class Trainer(object):
     
     def __init__(self, gp, opt_rate, max_iter, iter_tol, cost_tol):

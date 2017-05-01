@@ -3,15 +3,8 @@
 #  Author: Max W. Y. Lam (maxingaussian@gmail.com)
 ################################################################################
 
-from .Metric import Metric
-from .Scaler import Scaler
-from .Trainer import Trainer
-from .Visualizer import Visualizer
-
-
-__all__ = [
-    'Metric',
-    'Scaler',
-    'Trainer',
-    'Visualizer'
-]
+from .Metric import *
+from .Linalg import *
+from .Scaler import *
+from .Trainer import *
+from .Visualizer import *

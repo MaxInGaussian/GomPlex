@@ -8,6 +8,10 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
+__all__ = [
+    "Visualizer"
+]
+
 class Visualizer(object):
     
     def __init__(self, gp, metric='nmse', plot_limit=80):

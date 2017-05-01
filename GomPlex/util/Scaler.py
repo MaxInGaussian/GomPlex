@@ -5,6 +5,10 @@
 
 import numpy as np
 
+__all__ = [
+    "Scaler"
+]
+
 class Scaler(object):
 
     scalers = [
