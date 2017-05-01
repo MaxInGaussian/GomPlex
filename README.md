@@ -80,13 +80,15 @@ gp.fit(X, y, plot=True)
 ## True Function
 <div style="text-align:center">
 <img src ="http://www.sciweavers.org/upload/Tex2Img_1493627941/eqn.png" />
-<img src ="tests/demo_3d_plot_true_function.png" />
 </div>
+<img src ="tests/demo_3d_plot_true_function.png" />
+
 ## Synthesize Data
 <div style="text-align:center">
 <img src ="http://www.sciweavers.org/upload/Tex2Img_1493628463/eqn.png" />
-<img src ="tests/demo_3d_plot_data.png" />
 </div>
+<img src ="tests/demo_3d_plot_data.png" />
+
 # License
 Copyright (c) 2016, Max W. Y. Lam
 All rights reserved.
