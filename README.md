@@ -60,32 +60,33 @@ To install GomPlex, clone this repo:
 
     $ git clone https://github.com/MaxInGaussian/GomPlex.git
     $ python setup.py install
-   
-# Try GomPlex with Only 3 Lines of Code
+
+# Tutorial
+### Try GomPlex with Only 3 Lines of Code
 ```python
 from GomPlex import *
 gp = GomPlex(sparsity=30)
 gp.fit(X, y, opt_rate=1, max_iter=500, iter_tol=50, nlml_tol=1e-4)
 predict_mean, predict_std = gp.predict(new_X)
 ```
-## Analyze Training Process by Real-Time Plots
+### Analyze Training Process by Real-Time Plots
 ```python
 gp.fit(X, y, plot=True)
 ```
-# Toy Example: Custom 1-d Function
-## True Function
+## Toy Example: Custom 1-d Function
+### True Function
 <p align="center">
 <img src ="http://www.sciweavers.org/upload/Tex2Img_1493629203/eqn.png" />
 </p>
 <img src ="tests/demo_3d_plot_true_function.png" />
 
-## Synthesize Data
+### Synthesize Data
 <p align="center">
 <img src ="http://www.sciweavers.org/upload/Tex2Img_1493629264/eqn.png" />
 </p>
 <img src ="tests/demo_3d_plot_data.png" />
 
-## Train Regression
+### Train Regression
 <p align="center">
 <img src ="http://www.sciweavers.org/upload/Tex2Img_1493629286/eqn.png" />
 </p>
