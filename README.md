@@ -85,13 +85,13 @@ gp.fit(X, y, plot=True)
 
 ## Synthesize Data
 <p align="center">
-<img src ="http://www.sciweavers.org/upload/Tex2Img_1493629160/eqn.png" />
+<img src ="http://www.sciweavers.org/upload/Tex2Img_1493629264/eqn.png" />
 </p>
 <img src ="tests/demo_3d_plot_data.png" />
 
 ## Train Regression
 <p align="center">
-<img src ="http://www.sciweavers.org/upload/Tex2Img_1493629179/eqn.png" />
+<img src ="http://www.sciweavers.org/upload/Tex2Img_1493629286/eqn.png" />
 </p>
 <img src ="tests/demo_3d_plot_regression.png" />
 
