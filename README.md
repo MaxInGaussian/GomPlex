@@ -69,9 +69,7 @@ gp = GomPlex(<sparsity>)
 gp.fit(<X>, <y>, {opt_rate}, {max_iter}, {iter_tol}, {nlml_tol})
 predict_mean, predict_std = gp.predict(<new_X>)
 ```
-
-# Analyze Training Process on Real Time by Plot
-## Training on One-dimensional Inputs
+## Analyze Training Process by Real-Time Plot
 ```python
 gp.fit(X, y, plot=True)
 ```
