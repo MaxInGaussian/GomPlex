@@ -79,19 +79,19 @@ gp.fit(X, y, plot=True)
 # Toy Example: Custom 1-d Function
 ## True Function
 <p align="center">
-<img src ="http://www.sciweavers.org/upload/Tex2Img_1493627941/eqn.png" />
+<img src ="http://www.sciweavers.org/upload/Tex2Img_1493629203/eqn.png" />
 </p>
 <img src ="tests/demo_3d_plot_true_function.png" />
 
 ## Synthesize Data
 <p align="center">
-<img src ="http://www.sciweavers.org/upload/Tex2Img_1493628463/eqn.png" />
+<img src ="http://www.sciweavers.org/upload/Tex2Img_1493629160/eqn.png" />
 </p>
 <img src ="tests/demo_3d_plot_data.png" />
 
 ## Train Regression
 <p align="center">
-<img src ="http://www.sciweavers.org/upload/Tex2Img_1493629066/eqn.png" />
+<img src ="http://www.sciweavers.org/upload/Tex2Img_1493629179/eqn.png" />
 </p>
 <img src ="tests/demo_3d_plot_regression.png" />
 
