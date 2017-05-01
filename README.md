@@ -70,12 +70,11 @@ gp.fit(<X>, <y>, {opt_rate}, {max_iter}, {iter_tol}, {nlml_tol})
 predict_mean, predict_std = gp.predict(<new_X>)
 ```
 
-# Analyze Training Process on Real Time
+# Analyze Training Process on Real Time by Plot
 ## Training on One-dimensional Inputs
 ```python
 gp.fit(X, y, plot=True)
 ```
-![Plot1DFunction](tests/demo_regression_real_imag.png?raw=true "Plot 1D Function")
 # Toy Example: Custom 1-d Function
 ## True Function
 <p align="center">
@@ -94,6 +93,7 @@ gp.fit(X, y, plot=True)
 <img src ="http://www.sciweavers.org/upload/Tex2Img_1493629286/eqn.png" />
 </p>
 <img src ="tests/demo_3d_plot_regression.png" />
+<img src ="tests/demo_regression_real_imag.png" />
 
 # License
 Copyright (c) 2016, Max W. Y. Lam
