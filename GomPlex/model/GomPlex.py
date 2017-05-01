@@ -92,7 +92,7 @@ class GomPlex(object):
         self.mu = Phi.dot(self.alpha)
     
     def get_cost(self):
-        return self.get_cv_metric(1, 'nlml')
+        return self.get_cv_metric(2, 'nlml')
 
     def get_nlml(self):
         noise = self.noise_real+self.noise_imag*1j
