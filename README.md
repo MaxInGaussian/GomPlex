@@ -89,6 +89,12 @@ gp.fit(X, y, plot=True)
 </p>
 <img src ="tests/demo_3d_plot_data.png" />
 
+## Train Regression
+<p align="center">
+<img src ="http://www.sciweavers.org/upload/Tex2Img_1493629066/eqn.png" />
+</p>
+<img src ="tests/demo_3d_plot_regression.png" />
+
 # License
 Copyright (c) 2016, Max W. Y. Lam
 All rights reserved.
