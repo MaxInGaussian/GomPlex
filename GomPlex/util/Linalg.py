@@ -8,7 +8,7 @@ from scipy import linalg
 
 _all__ = [
     "approx_Phi",
-    "interpolate_Phi",
+    "interp_Phi",
     "fast_multiply",
     "fast_solve"
 ]
@@ -16,7 +16,7 @@ _all__ = [
 def approx_Phi(W, Phi_basis):
     return fast_multiply(Phi_basis, W.conj().T, True).conj().T
 
-def interpolate_Phi(Phi, phi_basis):
+def interp_Phi(Phi, phi_basis):
     W_H = np.zeros((phi_basis.shape[0], Phi.shape[0]))+0j
     H_basis = np.concatenate(([phi_basis[0]], phi_basis[1:][::-1])).conj()
     fft_basis = np.fft.fft(H_basis)
@@ -25,6 +25,24 @@ def interpolate_Phi(Phi, phi_basis):
         W_H[:, i] = np.fft.ifft(np.fft.fft(Phi[i, :].conj())/fft_basis)
     return W_H.conj().T
 
+def interp_Phi_by_FFT(Phi, type=1):
+    W = np.zeros_like(Phi)+0j
+    for j in range(Phi.shape[type]):
+        if(type == 1):
+            W[:, j] = np.fft.fft(Phi[:, j])
+        elif(type == 0):
+            W[j, :] = np.fft.fft(Phi[j, :])
+    return W
+    
+def interp_Phi_by_IFFT(W, type=1):
+    Phi = np.zeros_like(W)+0j
+    for j in range(W.shape[type]):
+        if(type == 1):
+            Phi[:, j] = np.fft.ifft(W[:, j])
+        elif(type == 0):
+            Phi[j, :] = np.fft.ifft(W[j, :])
+    return Phi
+    
 def fast_multiply(C, X, conj_trans=False):
     CX = np.zeros((C.shape[0], X.shape[1]))+0j
     fft_cir = np.fft.fft(C[0, :].conj() if conj_trans else C[:, 0])

@@ -7,7 +7,7 @@ from sys import path
 path.append("../")
 import numpy as np
 from scipy import linalg
-from GomPlex import fast_multiply, interpolate_Phi, approx_Phi, fast_solve
+from GomPlex import *
 
 N, M, D = 500, 100, 30
 X = .5*np.random.rand(N, D)+.5j*np.random.rand(N, D)
@@ -21,18 +21,26 @@ print('test of fast_multiply with conjugate transpose')
 print('all close:', np.allclose(C.conj().T.dot(X), fast_multiply(C, X, True)))
 
 print()
-print('test of interpolate_Phi')
+print('test of interp_Phi')
 Omega = np.random.randn(D, M)
 X_O = X.dot(Omega)
 Phi = np.exp(-2j*np.pi*X_O)/np.sqrt(M)
 phi_basis = np.exp(-2j*np.pi*np.median(X_O, 0))/np.sqrt(M)
 Phi_basis = linalg.circulant(phi_basis)
-W = interpolate_Phi(Phi, phi_basis)
+W = interp_Phi(Phi, phi_basis)
 W_true = (linalg.solve(Phi_basis.T, Phi.T)).T
 print('approx l0 error:',
     np.max(np.abs(np.dot(W, Phi_basis)-Phi))/np.mean(np.absolute(Phi)))
 print('approx l1 error:',
     np.mean(np.abs(np.dot(W, Phi_basis)-Phi))/np.mean(np.absolute(Phi)))
+    
+print()
+print('test of interp_Phi_by_FFT')
+W_fft = interp_Phi_by_FFT(Phi)
+print('approx l0 error:',
+    np.max(np.abs(interp_Phi_by_IFFT(W_fft)-Phi))/np.mean(np.absolute(Phi)))
+print('approx l1 error:',
+    np.mean(np.abs(interp_Phi_by_IFFT(W_fft)-Phi))/np.mean(np.absolute(Phi)))
 
 print()
 print('test of approx_Phi')
