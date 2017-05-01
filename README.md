@@ -67,7 +67,7 @@ from GomPlex import *
 # <>: necessary inputs, {}: optional inputs
 gp = GomPlex(<sparsity>)
 gp.fit(<X>, <y>, {opt_rate}, {max_iter}, {iter_tol}, {nlml_tol})
-predict_mean, predict_std = gp.predict(new_X)
+predict_mean, predict_std = gp.predict(<new_X>)
 ```
 
 # Analyze Training Process on Real Time
@@ -78,15 +78,15 @@ gp.fit(X, y, plot=True)
 ![Plot1DFunction](tests/demo_regression_real_imag.png?raw=true "Plot 1D Function")
 # Toy Example: Custom 1-d Function
 ## True Function
-<div style="text-align:center">
+<p align="center">
 <img src ="http://www.sciweavers.org/upload/Tex2Img_1493627941/eqn.png" />
-</div>
+</p>
 <img src ="tests/demo_3d_plot_true_function.png" />
 
 ## Synthesize Data
-<div style="text-align:center">
+<p align="center">
 <img src ="http://www.sciweavers.org/upload/Tex2Img_1493628463/eqn.png" />
-</div>
+</p>
 <img src ="tests/demo_3d_plot_data.png" />
 
 # License
