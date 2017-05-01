@@ -4,10 +4,26 @@
 ################################################################################
 
 import numpy as np
+from scipy import linalg
 
-__all__ = [
-    "fast_multiply"
+_all__ = [
+    "approxphi",
+    "interpolatephi",
+    "fast_multiply",
+    "fast_solve"
 ]
+
+def approxphi(W, Phi_basis):
+    return fast_multiply(Phi_basis, W.conj().T, True).conj().T
+
+def interpolatephi(Phi, phi_basis):
+    W_T = np.zeros((phi_basis.shape[0], Phi.shape[0]))+0j
+    H_basis = np.concatenate(([phi_basis[0]], phi_basis[1:][::-1]))
+    fft_basis = np.fft.fft(H_basis)
+    Phi_basis = linalg.circulant(phi_basis)
+    for i in range(Phi.shape[0]):
+        W_T[:, i] = np.fft.ifft(np.fft.fft(Phi[i, :])/fft_basis)
+    return W_T.T
 
 def fast_multiply(C, X, conj_trans=False):
     CX = np.zeros((C.shape[0], X.shape[1]))+0j
@@ -16,7 +32,16 @@ def fast_multiply(C, X, conj_trans=False):
         CX[:, i] = np.fft.ifft(fft_cir*np.fft.fft(X[:, i]))
     return CX
 
-def solve_A(W, Phi_k, y):
-    _r = y-fast_multiply(Phi_k, y)
-    _p = Phi_k.conj().T
-    
+def fast_solve(Q, Phi_basis, X, L=20):
+    f = np.zeros((Phi_basis.shape[0], X.shape[1]))+0j
+    _r = X-fast_multiply(Phi_basis, f)
+    p = fast_multiply(Phi_basis, _r, True)
+    for _ in range(L):
+        a = np.sum(_r.conj()*_r, 0)/np.sum(p.conj()*(Q.dot(p)), 0)
+        f += a*Q.dot(p)
+        r = _r-a*fast_multiply(Phi_basis, Q.dot(p))
+        b = np.sum(r.conj()*r, 0)/np.sum(_r.conj()*_r, 0)
+        p = b*p+fast_multiply(Phi_basis, r, True)
+        _r = r
+    return f
+        

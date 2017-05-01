@@ -20,14 +20,17 @@ print('pred std  =', std_pred)
 
 print('residuals =', np.abs(target-mu_pred))
 
+print()
 print('test of mse metric')
 mse = Metric(None, 'mse').eval(target, mu_pred, std_pred)
 print('\t mse =', mse)
 
+print()
 print('test of nmse metric')
 nmse = Metric(None, 'nmse').eval(target, mu_pred, std_pred)
 print('\t nmse =', nmse)
 
+print()
 print('test of nlpd metric')
 nlpd = Metric(None, 'nlpd').eval(target, mu_pred, std_pred)
 print('\t nlpd =', nlpd)
