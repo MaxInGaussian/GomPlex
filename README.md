@@ -78,7 +78,9 @@ gp.fit(X, y, plot=True)
 ![Plot1DFunction](tests/demo_regression_real_imag.png?raw=true "Plot 1D Function")
 # 1-d Toy Example
 Given our defined true function:
-![Plot1DFunction](http://www.sciweavers.org/upload/Tex2Img_1493627408/render.png?raw=true "Plot 1D Function")
+
+![Plot1DFunction](http://www.sciweavers.org/upload/Tex2Img_1493627941/eqn.png?raw=true "Plot 1D Function")
+
 ![Plot1DFunction](tests/demo_3d_plot_true_function.png?raw=true "Plot 1D Function")
    
 # License
