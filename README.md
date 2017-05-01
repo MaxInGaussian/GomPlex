@@ -79,8 +79,8 @@ gp.fit(X, y, plot=True)
 # Toy Example: Custom 1-d Function
 Given our defined true function:
 <div style="text-align:center">
-![Plot1DFunction](http://www.sciweavers.org/upload/Tex2Img_1493627941/eqn.png?raw=true "Plot 1D Function")
-![Plot1DFunction](tests/demo_3d_plot_true_function.png?raw=true "Plot 1D Function")
+<img src ="http://www.sciweavers.org/upload/Tex2Img_1493627941/eqn.png" />
+<img src ="tests/demo_3d_plot_true_function.png" />
 </div>
 # License
 Copyright (c) 2016, Max W. Y. Lam
