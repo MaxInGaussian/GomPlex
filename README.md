@@ -64,12 +64,11 @@ To install GomPlex, clone this repo:
 # Try GomPlex with Only 3 Lines of Code
 ```python
 from GomPlex import *
-# <>: necessary inputs, {}: optional inputs
-gp = GomPlex(<sparsity>)
-gp.fit(<X>, <y>, {opt_rate}, {max_iter}, {iter_tol}, {nlml_tol})
-predict_mean, predict_std = gp.predict(<new_X>)
+gp = GomPlex(sparsity=30)
+gp.fit(X, y, opt_rate=1, max_iter=500, iter_tol=50, nlml_tol=1e-4)
+predict_mean, predict_std = gp.predict(new_X)
 ```
-## Analyze Training Process by Real-Time Plot
+## Analyze Training Process by Real-Time Plots
 ```python
 gp.fit(X, y, plot=True)
 ```
