@@ -75,7 +75,6 @@ predict_mean, predict_std = gp.predict(new_X)
 ```python
 gp.fit(X, y, plot=True)
 ```
-<img src ="tests/demo_regression_real_imag.png" />
 
 ## Toy Example: Custom 1-d Function
 
@@ -83,19 +82,19 @@ gp.fit(X, y, plot=True)
 <p align="center">
 <img src ="http://www.sciweavers.org/upload/Tex2Img_1493629203/eqn.png" />
 </p>
-<img src ="tests/demo_3d_plot_true_function.png" />
+<img src ="plots/toy_1d_example_true_function.png" />
 
 ### Synthesize Data
 <p align="center">
 <img src ="http://www.sciweavers.org/upload/Tex2Img_1493629264/eqn.png" />
 </p>
-<img src ="tests/demo_3d_plot_data.png" />
+<img src ="plots/toy_1d_example_synthesize_data.png" />
 
-### Train Regression
+### Complex Regression with GomPlex
 <p align="center">
 <img src ="http://www.sciweavers.org/upload/Tex2Img_1493629286/eqn.png" />
 </p>
-<img src ="tests/demo_3d_plot_regression.png" />
+<img src ="plots/toy_1d_example_regression.png" />
 
 # License
 Copyright (c) 2016, Max W. Y. Lam

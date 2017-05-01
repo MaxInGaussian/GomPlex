@@ -24,7 +24,6 @@ print('test of GomPlex')
 gp = GomPlex(20)
 gp.fit(X, y, opt_rate=1, max_iter=500, iter_tol=50, nlml_tol=1e-4)
 
-
 mpl.rcParams['legend.fontsize'] = 10
 
 fig = plt.figure()
@@ -35,6 +34,10 @@ ax.legend()
 ax.set_xlabel('x')
 ax.set_ylabel('Re{y}')
 ax.set_zlabel('Im{y}')
+ax.set_xlim([-2.5*np.pi, 2.5*np.pi])
+ax.set_ylim([-2.5*np.pi, 2.5*np.pi])
+ax.set_zlim([-2.5*np.pi, 2.5*np.pi])
+fig.savefig('../plots/toy_1d_example_true_function.png')
 
 fig = plt.figure()
 ax = fig.gca(projection='3d')
@@ -44,13 +47,10 @@ ax.legend()
 ax.set_xlabel('x')
 ax.set_ylabel('Re{y}')
 ax.set_zlabel('Im{y}')
-
-fig = plt.figure()
-ax = fig.gca()
-ax.plot(fun1(x_plot), fun2(x_plot), 'b-', linewidth=2, label='true function')
-ax.legend()
-ax.set_xlabel('Re{y}')
-ax.set_ylabel('Im{y}')
+ax.set_xlim([-2.5*np.pi, 2.5*np.pi])
+ax.set_ylim([-2.5*np.pi, 2.5*np.pi])
+ax.set_zlim([-2.5*np.pi, 2.5*np.pi])
+fig.savefig('../plots/toy_1d_example_synthesize_data.png')
 
 fig = plt.figure()
 ax = fig.gca(projection='3d')
@@ -65,6 +65,10 @@ ax.legend()
 ax.set_xlabel('x')
 ax.set_ylabel('Re{y}')
 ax.set_zlabel('Im{y}')
+ax.set_xlim([-2.5*np.pi, 2.5*np.pi])
+ax.set_ylim([-2.5*np.pi, 2.5*np.pi])
+ax.set_zlim([-2.5*np.pi, 2.5*np.pi])
+fig.savefig('../plots/toy_1d_example_regression.png')
 
 plt.show()
 
