@@ -77,10 +77,15 @@ gp.fit(X, y, plot=True)
 ```
 ![Plot1DFunction](tests/demo_regression_real_imag.png?raw=true "Plot 1D Function")
 # Toy Example: Custom 1-d Function
-Given our defined true function:
+## True Function
 <div style="text-align:center">
 <img src ="http://www.sciweavers.org/upload/Tex2Img_1493627941/eqn.png" />
 <img src ="tests/demo_3d_plot_true_function.png" />
+</div>
+## Synthesize Data
+<div style="text-align:center">
+<img src ="http://www.sciweavers.org/upload/Tex2Img_1493628463/eqn.png" />
+<img src ="tests/demo_3d_plot_data.png" />
 </div>
 # License
 Copyright (c) 2016, Max W. Y. Lam
