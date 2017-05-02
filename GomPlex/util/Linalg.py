@@ -8,17 +8,6 @@ from scipy import linalg
 from scipy.sparse import csr_matrix
 from numpy.fft import fft, ifft, fftshift, ifftshift
 
-_all__ = [
-    "ndft",
-    "nfft",
-    "interp_Phi_by_basis",
-    "get_Phi_by_basis",
-    "interp_Phi_by_FFT",
-    "get_Phi_by_FFT",
-    "fast_multiply",
-    "fast_solve"
-]
-
 def ndft(x, f_hat, M):
     k = -(M//2)+np.arange(M)
     return np.dot(np.exp(-2j*np.pi*k*x[:, None]), f_hat)
