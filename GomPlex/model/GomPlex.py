@@ -7,7 +7,8 @@ import random
 import numpy as np
 import numpy.random as npr
 from scipy import linalg
-from .. import Scaler, Metric, Trainer, Visualizer
+
+from .. import *
 
 class GomPlex(object):
     

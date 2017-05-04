@@ -11,13 +11,13 @@ from timeit import Timer
 
 from GomPlex import *
 
-repeat = 1
-N, M, K, D = 10000, 300, 10, 30
+time_reps = 1
+N, M, K, D = 1000, 500, 10, 30
 X = .5*np.random.rand(N, D)
 Omega = np.random.randn(D, K)
 X_nfft = X.dot(Omega)
 x = X_nfft.ravel()
-f = np.repeat(np.sin(-20*np.pi*np.mean(X_nfft, 1)), K)+0j
+f = np.time_reps(np.sin(-20*np.pi*np.mean(X_nfft, 1)), K)+0j
 f_hat = np.random.randn(M)+0j
 noise = 1e-2
 y = f+np.random.randn(N*K)*np.sqrt(noise)
@@ -30,9 +30,9 @@ print('approx l0 error:', np.max(np.abs(f_true-f_fast)))
 print('approx l1 error:', np.mean(np.abs(f_true-f_fast)))
 print('approx l2 error:', np.sqrt(np.mean(np.abs(f_true-f_fast)**2)))
 timer = Timer(lambda:ndft(x, f_hat, M))
-print('numpy needs   ', timer.timeit(repeat)/repeat, 's')
+print('numpy needs   ', timer.timeit(time_reps)/time_reps, 's')
 timer = Timer(lambda:nfft(x, f_hat, M))
-print('our algo needs', timer.timeit(repeat)/repeat, 's')
+print('our algo needs', timer.timeit(time_reps)/time_reps, 's')
 
 print()
 print('test of adj_nfft')
@@ -42,9 +42,9 @@ print('approx l0 error:', np.max(np.abs(f_hat_true-f_hat_fast)))
 print('approx l1 error:', np.mean(np.abs(f_hat_true-f_hat_fast)))
 print('approx l2 error:', np.sqrt(np.mean(np.abs(f_hat_true-f_hat_fast)**2)))
 timer = Timer(lambda:adj_ndft(x, f, M))
-print('numpy needs   ', timer.timeit(repeat)/repeat, 's')
+print('numpy needs   ', timer.timeit(time_reps)/time_reps, 's')
 timer = Timer(lambda:adj_nfft(x, f, M))
-print('our algo needs', timer.timeit(repeat)/repeat, 's')
+print('our algo needs', timer.timeit(time_reps)/time_reps, 's')
 
 print()
 print('test of solve_Phi_algo_1')
@@ -54,9 +54,9 @@ print('approx l0 error:', np.max(np.abs(pinv_true-pinv_fast)))
 print('approx l1 error:', np.mean(np.abs(pinv_true-pinv_fast)))
 print('approx l2 error:', np.sqrt(np.mean(np.abs(pinv_true-pinv_fast)**2)))
 timer = Timer(lambda:numpy_solve_Phi(f, x, M))
-print('numpy needs   ', timer.timeit(repeat)/repeat, 's')
+print('numpy needs   ', timer.timeit(time_reps)/time_reps, 's')
 timer = Timer(lambda:solve_Phi_algo_1(f, x, M))
-print('our algo needs', timer.timeit(repeat)/repeat, 's')
+print('our algo needs', timer.timeit(time_reps)/time_reps, 's')
 
 print()
 print('test of solve_Phi_algo_2')
@@ -66,9 +66,9 @@ print('approx l0 error:', np.max(np.abs(pinv_true-pinv_fast)))
 print('approx l1 error:', np.mean(np.abs(pinv_true-pinv_fast)))
 print('approx l2 error:', np.sqrt(np.mean(np.abs(pinv_true-pinv_fast)**2)))
 timer = Timer(lambda:numpy_solve_Phi(f, x, M))
-print('numpy needs   ', timer.timeit(repeat)/repeat, 's')
+print('numpy needs   ', timer.timeit(time_reps)/time_reps, 's')
 timer = Timer(lambda:solve_Phi_algo_2(f, x, M))
-print('our algo needs', timer.timeit(repeat)/repeat, 's')
+print('our algo needs', timer.timeit(time_reps)/time_reps, 's')
 
 print()
 print('test of solve_A_tilde_algo_1')
@@ -78,9 +78,9 @@ print('approx l0 error:', np.max(np.abs(pinvA_true-pinvA_fast)))
 print('approx l1 error:', np.mean(np.abs(pinvA_true-pinvA_fast)))
 print('approx l2 error:', np.sqrt(np.mean(np.abs(pinvA_true-pinvA_fast)**2)))
 timer = Timer(lambda:numpy_solve_A_tilde(f_hat, x, M))
-print('numpy needs   ', timer.timeit(repeat)/repeat, 's')
+print('numpy needs   ', timer.timeit(time_reps)/time_reps, 's')
 timer = Timer(lambda:solve_A_tilde_algo_1(f_hat, x, M))
-print('our algo needs', timer.timeit(repeat)/repeat, 's')
+print('our algo needs', timer.timeit(time_reps)/time_reps, 's')
 
 print()
 print('test of solve_A_tilde_algo_2')
@@ -90,9 +90,9 @@ print('approx l0 error:', np.max(np.abs(pinvA_true-pinvA_fast)))
 print('approx l1 error:', np.mean(np.abs(pinvA_true-pinvA_fast)))
 print('approx l2 error:', np.sqrt(np.mean(np.abs(pinvA_true-pinvA_fast)**2)))
 timer = Timer(lambda:numpy_solve_A_tilde(f_hat, x, M))
-print('numpy needs   ', timer.timeit(repeat)/repeat, 's')
+print('numpy needs   ', timer.timeit(time_reps)/time_reps, 's')
 timer = Timer(lambda:solve_A_tilde_algo_2(f_hat, x, M))
-print('our algo needs', timer.timeit(repeat)/repeat, 's')
+print('our algo needs', timer.timeit(time_reps)/time_reps, 's')
 
 print()
 print('test of solve_A_algo_1')
@@ -102,9 +102,9 @@ print('approx l0 error:', np.max(np.abs(sol_true-sol_fast)))
 print('approx l1 error:', np.mean(np.abs(sol_true-sol_fast)))
 print('approx l2 error:', np.sqrt(np.mean(np.abs(sol_true-sol_fast)**2)))
 timer = Timer(lambda:numpy_solve_A(y, x, M, noise))
-print('numpy needs   ', timer.timeit(repeat)/repeat, 's')
+print('numpy needs   ', timer.timeit(time_reps)/time_reps, 's')
 timer = Timer(lambda:solve_A_algo_1(y, x, M, noise))
-print('our algo needs', timer.timeit(repeat)/repeat, 's')
+print('our algo needs', timer.timeit(time_reps)/time_reps, 's')
 
 print()
 print('test of solve_A_algo_2')
@@ -114,9 +114,9 @@ print('approx l0 error:', np.max(np.abs(sol_true-sol_fast)))
 print('approx l1 error:', np.mean(np.abs(sol_true-sol_fast)))
 print('approx l2 error:', np.sqrt(np.mean(np.abs(sol_true-sol_fast)**2)))
 timer = Timer(lambda:numpy_solve_A(y, x, M, noise))
-print('numpy needs   ', timer.timeit(repeat)/repeat, 's')
+print('numpy needs   ', timer.timeit(time_reps)/time_reps, 's')
 timer = Timer(lambda:solve_A_algo_2(y, x, M, noise))
-print('our algo needs', timer.timeit(repeat)/repeat, 's')
+print('our algo needs', timer.timeit(time_reps)/time_reps, 's')
 
 
 
