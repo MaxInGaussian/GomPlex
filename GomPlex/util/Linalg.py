@@ -63,12 +63,56 @@ def adj_nfft(x, f, M, sigma=2, tol=1e-8):
 def adj_ndft_mat(x, F, M):
     k = -(M//2)+np.arange(M)
     return np.dot(np.exp(2j*np.pi*x*k[:, None]), F)
-    
+
 def adj_nfft_mat(x, F, M, sigma=2, tol=1e-8):
     F_hat = np.zeros((x.shape[0], F.shape[1]))+0j
     for j in range(F.shape[1]):
         F_hat[:, j] = adj_nfft(x, F[:, j], M, sigma, tol)
     return F_hat
+
+def numpy_solve_nfft(y, x, M):
+    # f_hat = (Phi^H Phi)^-1 Phi^H y
+    k = -(M//2)+np.arange(M)
+    Phi = np.exp(-2j*np.pi*k*x[:, None])
+    return linalg.solve(Phi.conj().T.dot(Phi), Phi.conj().T.dot(y))
+
+def fast_solve_nfft(y, x, M, tol=1e-8):
+    # f_hat = (Phi^H Phi)^-1 Phi^H y
+    f_hat = np.random.rand(M)*(1e-1+1e-1j)
+    r = y-nfft(x, f_hat, M)
+    _z = adj_nfft(x, r, M)
+    p = _z.copy()
+    while(True):
+        v = nfft(x, p, M)
+        a = _z.conj().T.dot(_z)/v.conj().T.dot(v)
+        f_hat += a*p
+        r -= a*v
+        z = adj_nfft(x, r, M)
+        b = z.conj().T.dot(z)/_z.conj().T.dot(_z)
+        p = b*p+z
+        if(z.max() < tol):
+            break
+        _z = z
+    return f_hat
+
+def fast_solve_noisy_nfft(y, x, M, noise, tol=1e-8):
+    f_hat = np.random.rand(M)*(1e-1+1e-1j)
+    r = y-nfft(x, f_hat, M)
+    _z = adj_nfft(x, r, M)
+    p = _z.copy()
+    while(True):
+        v = nfft(x, p, M)
+        a = _z.conj().T.dot(_z)/v.conj().T.dot(v)
+        f_hat += a*p
+        r -= a*v
+        z = adj_nfft(x, r, M)
+        b = z.conj().T.dot(z)/_z.conj().T.dot(_z)
+        p = b*p+z
+        if(z < tol):
+            break
+        _z = z
+        print(np.mean(np.abs(y-nfft(x, f_hat, M)))/np.mean(np.absolute(y)))
+    return f_hat
 
 def Phi(X, spectral_freqs):
     X_sparse = self.X.dot(self.spectral_freqs)
@@ -78,13 +122,8 @@ def Phi(X, spectral_freqs):
 
 def Phi_nfft(X, spectral_freqs):
     X_sparse = X.dot(spectral_freqs)
-    
-    W_H = np.zeros((phi_basis.shape[0], Phi.shape[0]))+0j
-    H_basis = np.concatenate(([phi_basis[0]], phi_basis[1:][::-1])).conj()
-    fft_basis = np.fft.fft(H_basis)
-    Phi_basis = linalg.circulant(phi_basis)
-    for i in range(Phi.shape[0]):
-        W_H[:, i] = np.fft.ifft(np.fft.fft(Phi[i, :].conj())/fft_basis)
+    k = -(M//2)+np.arange(M)
+    np.exp(-2j*np.pi*k*X_sparse)
     return W_H.conj().T
 
 def interp_Phi_by_basis(Phi, phi_basis):
@@ -97,7 +136,7 @@ def interp_Phi_by_basis(Phi, phi_basis):
     return W_H.conj().T
 
 def get_Phi_by_basis(W, Phi_basis):
-    return fast_multiply(Phi_basis, W.conj().T, True).conj().T
+    return circulant_mul(Phi_basis, W.conj().T, True).conj().T
 
 def interp_Phi_by_FFT(Phi, vert=True):
     if(vert):
@@ -111,23 +150,25 @@ def get_Phi_by_FFT(W, vert=True):
     else:
         return np.fft.ifft(W)
     
-def fast_multiply(C, X, conj_trans=False):
+def circulant_mul(C, X, conj_trans=False):
     CX = np.zeros((C.shape[0], X.shape[1]))+0j
     fft_cir = np.fft.fft(C[0, :].conj() if conj_trans else C[:, 0])
     for i in range(X.shape[1]):
         CX[:, i] = np.fft.ifft(fft_cir*np.fft.fft(X[:, i]))
     return CX
 
-def fast_solve(Q, Phi_basis, X, L=20):
+def fast_solve_circulant(Q, Phi_basis, X, tol=1e-8):
     f = np.zeros((Phi_basis.shape[0], X.shape[1]))+0j
-    _r = X-fast_multiply(Phi_basis, f)
-    p = fast_multiply(Phi_basis, _r, True)
-    for _ in range(L):
+    _r = X-circulant_mul(Phi_basis, f)
+    p = circulant_mul(Phi_basis, _r, True)
+    while(True):
         a = np.sum(_r.conj()*_r, 0)/np.sum(p.conj()*(Q.dot(p)), 0)
         f += a*Q.dot(p)
-        r = _r-a*fast_multiply(Phi_basis, Q.dot(p))
+        r = _r-a*circulant_mul(Phi_basis, Q.dot(p))
         b = np.sum(r.conj()*r, 0)/np.sum(_r.conj()*_r, 0)
-        p = b*p+fast_multiply(Phi_basis, r, True)
+        p = b*p+circulant_mul(Phi_basis, r, True)
+        if(r < tol):
+            break
         _r = r
     return f
         
