@@ -70,13 +70,13 @@ def adj_nfft_mat(x, F, M, sigma=2, tol=1e-8):
         F_hat[:, j] = adj_nfft(x, F[:, j], M, sigma, tol)
     return F_hat
 
-def numpy_solve_nfft(y, x, M):
+def numpy_solve_Phi(y, x, M):
     # f_hat = (Phi^H Phi)^-1 Phi^H y
     k = -(M//2)+np.arange(M)
     Phi = np.exp(-2j*np.pi*k*x[:, None])
     return linalg.solve(Phi.conj().T.dot(Phi), Phi.conj().T.dot(y))
 
-def fast_solve_nfft(y, x, M, tol=1e-8):
+def fast_solve_Phi(y, x, M, tol=1e-8):
     # f_hat = (Phi^H Phi)^-1 Phi^H y
     f_hat = np.random.rand(M)*(1e-1+1e-1j)
     r = y-nfft(x, f_hat, M)
@@ -90,28 +90,41 @@ def fast_solve_nfft(y, x, M, tol=1e-8):
         z = adj_nfft(x, r, M)
         b = z.conj().T.dot(z)/_z.conj().T.dot(_z)
         p = b*p+z
-        if(z.max() < tol):
+        if(np.abs(z).max() < tol):
             break
         _z = z
     return f_hat
 
-def fast_solve_noisy_nfft(y, x, M, noise, tol=1e-8):
-    f_hat = np.random.rand(M)*(1e-1+1e-1j)
-    r = y-nfft(x, f_hat, M)
-    _z = adj_nfft(x, r, M)
+def fast_solve_Phi_H(y, x, M, tol=1e-8):
+    # f_hat = (Phi Phi^H)^-1 Phi y
+    f_hat = np.random.rand(x.shape[0])*(1e-1+1e-1j)
+    r = y-adj_nfft(x, f_hat, M)
+    _z = nfft(x, r, M)
     p = _z.copy()
     while(True):
-        v = nfft(x, p, M)
+        v = adj_nfft(x, p, M)
         a = _z.conj().T.dot(_z)/v.conj().T.dot(v)
         f_hat += a*p
         r -= a*v
-        z = adj_nfft(x, r, M)
+        z = nfft(x, r, M)
         b = z.conj().T.dot(z)/_z.conj().T.dot(_z)
         p = b*p+z
-        if(z < tol):
+        if(np.abs(z).max() < tol):
             break
         _z = z
-        print(np.mean(np.abs(y-nfft(x, f_hat, M)))/np.mean(np.absolute(y)))
+    return f_hat
+
+def numpy_solve_A_tilde(y, x, M, tol=1e-8):
+    k = -(M//2)+np.arange(M)
+    Phi = np.exp(-2j*np.pi*k*x[:, None])
+    return linalg.solve(Phi.conj().T.dot(Phi), y)
+
+def fast_solve_A_tilde(y, x, M, tol=1e-8):
+    return fast_solve_Phi(fast_solve_Phi_H(y, x, M), x, M)
+
+def fast_solve_noisy_nfft(y, x, M, noise, tol=1e-8):
+    f_hat = fast_solve_Phi(y, x, M)
+    f_hat-noise*fast_solve_Phi(f_hat, x, M)
     return f_hat
 
 def Phi(X, spectral_freqs):

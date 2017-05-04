@@ -1,7 +1,7 @@
 # GomPlex
 
 GomPlex is a machine learning toolkit designed for predictive modeling of
-complex-valued predictions. The key of success is to find a tailormade function
+complex-valued functions. The key of success is to find a tailormade function
 that maps the inputs to the targets. In this sense, linear functions undoubtedly
 would be too simple to solve the problem. Nevertheless, non-linear functions
 with much flexibility are mostly concerned. In fact, there are uncountable ways
