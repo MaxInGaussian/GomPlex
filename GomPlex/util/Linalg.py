@@ -122,9 +122,15 @@ def numpy_solve_A_tilde(y, x, M, tol=1e-8):
 def fast_solve_A_tilde(y, x, M, tol=1e-8):
     return fast_solve_Phi(fast_solve_Phi_H(y, x, M), x, M)
 
+def numpy_solve_noisy_nfft(y, x, M, noise, tol=1e-8):
+    k = -(M//2)+np.arange(M)
+    Phi = np.exp(-2j*np.pi*k*x[:, None])
+    A_tilde = Phi.conj().T.dot(Phi)
+    return linalg.solve(A_tilde+noise*np.eye(M), Phi.conj().T.dot(y))
+
 def fast_solve_noisy_nfft(y, x, M, noise, tol=1e-8):
     f_hat = fast_solve_Phi(y, x, M)
-    f_hat-noise*fast_solve_Phi(f_hat, x, M)
+    f_hat -= noise*fast_solve_A_tilde(f_hat, x, M)
     return f_hat
 
 def Phi(X, spectral_freqs):
