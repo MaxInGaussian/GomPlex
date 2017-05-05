@@ -18,12 +18,12 @@ PIXEL_CENTIMETER = 62.992126
 
 in_centimeter = True
 forecast_step = 1
-sampling_points = 100
+sampling_points = 50
 stroke_size_tol, stroke_length_tol = 10, 1
 time_faction, gender, age, edu_level = True, True, True, True
 
 length = lambda sx, sy, ex, ey: np.sqrt((sx-ex)**2+(sy-ey)**2)
-
+    
 def show_drawing_data(d_X, d_Y, spectrum, d_sI=None, label="Time"):
     fig = plt.figure()
     ax = fig.gca(projection='3d')
@@ -39,7 +39,7 @@ def show_drawing_data(d_X, d_Y, spectrum, d_sI=None, label="Time"):
     ax.set_ylim([-1.6, 900/PIXEL_CENTIMETER] if in_centimeter else [-100, 900])
     ax.set_zlim([-0.8, 450/PIXEL_CENTIMETER] if in_centimeter else [-50, 450])
 
-def preprocessing(d_X, d_Y, d_W, d_T, plot=True):
+def preprocessing(d_X, d_Y, d_W, d_T, plot=False):
     coordinates, strokes, coordinate_to_stroke = [], [], {}
     d_L, d_V = [], []
     stop_points = np.where(d_W==1)[0]
@@ -69,8 +69,11 @@ def preprocessing(d_X, d_Y, d_W, d_T, plot=True):
         show_drawing_data(d_X, d_Y, d_cT)
         plt.title('drawing data after cleansing')
     d_cL = np.cumsum(d_L)
+    if(len(d_cL) == 0):
+        show_drawing_data(d_X, d_Y, d_cT)
+        plt.show()
     sampled_coordinates, d_sI = [], [[]for _ in range(len(strokes))]
-    for s in range(sampling_points):
+    for s in range(sampling_points-1):
         d_cl = (s+1)*d_cL[-1]/sampling_points
         sampled_coordinate = bisect_left(d_cL, d_cl)
         if(sampled_coordinate not in sampled_coordinates):
@@ -110,7 +113,7 @@ def get_steps_ahead_forecasting_data(d_X, d_Y, d_W, d_T):
             x, y, ct = d_X[input_coord], d_Y[input_coord], d_cT[input_coord]
             cl, v = d_cL[input_coord], d_V[input_coord]
             forecast_coord = d_s[i+forecast_step]
-            forecast_input.append([x, y, ct, cl, v])
+            forecast_input.append([x, y, ct, cl, v, s])
             forecast_target.append([d_X[forecast_coord]+1j*d_Y[forecast_coord]])
     return np.array(forecast_input), np.array(forecast_target)
 
@@ -122,6 +125,8 @@ def get_training_data():
         d_Y = decode(drawing_raw_data_df['Y'][subject_id])
         d_W = decode(drawing_raw_data_df['W'][subject_id])
         d_T = decode(drawing_raw_data_df['T'][subject_id])
+        if(len(d_X) < sampling_points):
+            continue
         if(in_centimeter):
             d_X /= PIXEL_CENTIMETER
             d_Y /= PIXEL_CENTIMETER
@@ -145,17 +150,19 @@ def get_training_data():
 X, y = get_training_data()
 
 gp = GomPlex(30)
-gp.fit(X, y, opt_rate=1, max_iter=500, iter_tol=50, nlml_tol=1e-3, plot=False)
+gp.fit(X, y, opt_rate=1, max_iter=500, iter_tol=50, cost_tol=1e-3, plot=True)
 
 fig = plt.figure()
 ax = fig.gca(projection='3d')
 x_plot = gp.X[:, 0]
-ax.scatter(gp.X[:, 0], gp.y.real.ravel(), gp.y.imag.ravel(), marker='x', s=30, alpha=0.2, label='training data')
+ax.scatter(gp.X[:, 0], gp.y.real.ravel(), gp.y.imag.ravel(),
+    marker='x', s=30, alpha=0.2, label='training data')
 ax.legend()
 mu, std = gp.predict(gp.X, scaled=False)
 mu_r = mu.real.ravel()
 mu_i = mu.imag.ravel()
-ax.scatter(x_plot, mu_r, mu_i, marker='.', color='red', s=30, alpha=0.5, label='complex regression')
+ax.scatter(x_plot, mu_r, mu_i, marker='.', color='red',
+    s=30, alpha=0.5, label='complex regression')
 ax.legend()
 ax.set_xlabel('x')
 ax.set_ylabel('Re{y}')

@@ -18,4 +18,4 @@ X, y = x[:, None], (y_r+y_i*1j)[:, None]
 
 print('test of Visualizer in GomPlex')
 gp = GomPlex(20)
-gp.fit(X, y, opt_rate=1e-1, max_iter=500, iter_tol=30, nlml_tol=1e-4, plot=True)
+gp.fit(X, y, opt_rate=1e-1, max_iter=500, iter_tol=30, cost_tol=1e-4, plot=True)
