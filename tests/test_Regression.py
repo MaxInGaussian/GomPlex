@@ -22,7 +22,7 @@ X, y = x[:, None], (y_r+y_i*1j)[:, None]
 
 print('test of GomPlex')
 gp = GomPlex(100)
-gp.fit(X, y, opt_rate=1, max_iter=500, iter_tol=30, cost_tol=1e-3)
+gp.fit(X, y, opt_rate=1, max_iter=500, iter_tol=30, early_stopping=10)
 
 mpl.rcParams['legend.fontsize'] = 10
 fig = plt.figure()

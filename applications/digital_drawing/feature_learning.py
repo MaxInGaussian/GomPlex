@@ -5,6 +5,8 @@
 
 from sys import path
 path.append("../../")
+import warnings
+warnings.filterwarnings("ignore")
 import numpy as np
 import numpy.random as npr
 import os, fnmatch
@@ -200,8 +202,8 @@ print('  Done.')
 while(True):
     
     print('# Training GomPlex')
-    gp = GomPlex(30)
-    gp.fit(X_train, y_train, opt_rate=1, cost_tol=1, plot=True)
+    gp = GomPlex(npr.randint(int(np.log(X_train.shape[0]))*5)+5)
+    gp.fit(X_train, y_train, opt_rate=1, plot=True)
     print('  Done.')
     
     print('# Choosing GomPlex Models')
@@ -211,25 +213,9 @@ while(True):
         best_gp = GomPlex().load(MODEL_PATH)
         best_gp_score = metric.eval(y_test, *best_gp.predict(X_test))
         new_gp_score = metric.eval(y_test, *gp.predict(X_test))
+        print('  new trained model   - %s %.6f'%(metric.metric, new_gp_score))
+        print('  original best model - %s %.6f'%(metric.metric, best_gp_score))
         if(new_gp_score < best_gp_score):
             gp.save(MODEL_PATH)
     print('  Found Better Model!')
     print('  Done.')
-
-fig = plt.figure()
-ax = fig.gca(projection='3d')
-x_plot = gp.X[:, 0]
-ax.scatter(gp.X[:, 0], gp.y.real.ravel(), gp.y.imag.ravel(),
-    marker='x', s=30, alpha=0.2, label='training data')
-ax.legend()
-mu, std = gp.predict(gp.X, scaled=False)
-mu_r = mu.real.ravel()
-mu_i = mu.imag.ravel()
-ax.scatter(x_plot, mu_r, mu_i, marker='.', color='red',
-    s=30, alpha=0.5, label='complex regression')
-ax.legend()
-ax.set_xlabel('x')
-ax.set_ylabel('Re{y}')
-ax.set_zlabel('Im{y}')
-
-plt.show()
