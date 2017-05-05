@@ -71,34 +71,26 @@ class Visualizer(object):
 
     def plot_training_general(self):
         self.fig.suptitle(self.gp.__str__(), fontsize=15)
-        ax1 = self.fig.add_subplot(211)
-        ax2 = self.fig.add_subplot(212)
-        plt.xlabel('TIME(s)', fontsize=13)
+        ax = self.fig.add_subplot()
+        plt.xlabel('ITERATION', fontsize=13)
         def animate(trainer):
             if(trainer.iter == 0):
-                data_x1, data_y1, data_x2, data_y2 = [], [], [], []
+                data_x, data_y = [], []
             else:
-                data_x1 = ax1.lines[0].get_xdata().tolist()
-                data_y1 = ax1.lines[0].get_ydata().tolist()
-                data_x2 = ax2.lines[0].get_xdata().tolist()
-                data_y2 = ax2.lines[0].get_ydata().tolist()
-            data_x1.append(self.gp.evals['time'][1][-1])
-            obj = self.gp.evals['obj'][1][self.gp.evals_ind]
-            data_y1.append(obj)
-            ax1.cla()
-            ax1.plot(data_x1[-self.plot_limit:], data_y1[-self.plot_limit:],
+                data_x = ax.lines[0].get_xdata().tolist()
+                data_y = ax.lines[0].get_ydata().tolist()
+            data_x.append(trainer.iter)
+            data_y.append(self.gp.last_cost)
+            ax.cla()
+            ax.plot(data_x[-self.plot_limit:], data_y[-self.plot_limit:],
                 color='r', linewidth=2.0, label='MIN OBJ')
             handles, labels = ax1.get_legend_handles_labels()
-            ax1.legend(handles, labels, loc='upper center',
+            ax.legend(handles, labels, loc='upper center',
                 bbox_to_anchor=(0.5, 1.05), ncol=1, fancybox=True)   
-            data_x2.append(self.gp.evals['time'][1][-1])
-            val = self.gp.evals[self.eval][1][self.gp.evals_ind]
-            data_y2.append(val)          
-            ax2.cla()
-            ax2.plot(data_x2[-self.plot_limit:], data_y2[-self.plot_limit:],
-                color='b', linewidth=2.0, label=self.eval.upper())
-            handles, labels = ax2.get_legend_handles_labels()
-            ax2.legend(handles, labels, loc='upper center',
-                bbox_to_anchor=(0.5, 1.05), ncol=1, fancybox=True)
             plt.pause(0.01)
         return animate
+
+
+
+
+

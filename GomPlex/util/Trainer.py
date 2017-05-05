@@ -29,9 +29,9 @@ class Trainer(object):
                 hyperparams = self.learned_hyperparams.copy()
             hyperparams = self.apply_update_rule(hyperparams, grad)
             self.gp.set_hyperparams(hyperparams)
+            self.iter += 1
             if(animate is not None):
                 animate(self)
-            self.iter += 1
             cost = self.gp.get_cost()
             self.cost_diff = abs(cost-self.min_cost)
             print(self.iter, ":", self.min_cost, ':', cost)

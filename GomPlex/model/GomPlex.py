@@ -48,7 +48,7 @@ class GomPlex(object):
         noise = self.noise_real+self.noise_imag*1j
         std = np.sqrt(noise*(1+np.diagonal(Phi.dot(self.inv_A.dot(Phi.conj().T)))))[:, None]
         if(scaled):
-            std *= (self.y_scaler.__r_std__+self.y_scaler.__i_std__*1j)
+            std *= (self.y_scaler._r_std_+self.y_scaler._i_std_*1j)
         return mu, std
     
     def init_hyperparams(self, rand_num=100):
@@ -127,17 +127,17 @@ class GomPlex(object):
         return np.sum(cv_results)/data.shape[0]
 
     def get_cost_grad(self):
-        cost = self.get_cost()
-        d_cost_d_noise = self.get_d_cost_d_noise(cost)
+        self.last_cost = self.get_cost()
+        d_cost_d_noise = self.get_d_cost_d_noise()
         g11 = self.noise_real*d_cost_d_noise[0]
         g12 = self.noise_imag*d_cost_d_noise[1]
-        d_cost_d_kernel_scale = self.get_d_cost_d_kernel_scale(cost)
+        d_cost_d_kernel_scale = self.get_d_cost_d_kernel_scale()
         g2 = self.kernel_scale*d_cost_d_kernel_scale.real
-        d_cost_d_spectral_freqs = self.get_d_cost_d_spectral_freqs(cost)
-        g3 = np.reshape(d_cost_d_spectral_freqs.real, (self.D*self.M,))
+        d_cost_d_freqs = self.get_d_cost_d_freqs()
+        g3 = np.reshape(d_cost_d_freqs.real, (self.D*self.M,))
         return np.concatenate([[g11, g12, g2], g3])
     
-    def get_d_cost_d_noise(self, cost):
+    def get_d_cost_d_noise(self):
         # Warning: naive numerical gradient is used for testing the idea
         self.noise_real += self.grad_epsilon
         self.train()
@@ -147,33 +147,33 @@ class GomPlex(object):
         self.train()
         cost_plus_j = self.get_cost()
         self.noise_imag -= self.grad_epsilon
-        return [(cost_plus-cost)/self.grad_epsilon,
-            (cost_plus_j-cost)/self.grad_epsilon]
+        return [(cost_plus-self.last_cost)/self.grad_epsilon,
+            (cost_plus_j-self.last_cost)/self.grad_epsilon]
     
-    def get_d_cost_d_kernel_scale(self, cost):
+    def get_d_cost_d_kernel_scale(self):
         # Warning: naive numerical gradient is used for testing the idea
         self.kernel_scale += self.grad_epsilon
         self.train()
         cost_plus = self.get_cost()
         self.kernel_scale -= self.grad_epsilon
-        return (cost_plus-cost)/self.grad_epsilon
+        return (cost_plus-self.last_cost)/self.grad_epsilon
     
-    def get_d_cost_d_spectral_freqs(self, cost):
+    def get_d_cost_d_freqs(self):
         # Warning: naive numerical gradient is used for testing the idea
-        d_cost_d_spectral_freqs = np.zeros_like(self.spectral_freqs)
+        d_cost_d_freqs = np.zeros_like(self.spectral_freqs)
         for m in range(self.M):
             self.spectral_freqs[:, m] += self.grad_epsilon
             self.train()
             cost_plus = self.get_cost()
             self.spectral_freqs[:, m] -= self.grad_epsilon
-            d_cost_d_spectral_freqs[:, m] += (cost_plus-cost)/self.grad_epsilon
+            d_cost_d_freqs[:, m] += (cost_plus-self.last_cost)/self.grad_epsilon
         for d in range(self.D):
             self.spectral_freqs[d, :] += self.grad_epsilon
             self.train()
             cost_plus = self.get_cost()
             self.spectral_freqs[d, :] -= self.grad_epsilon
-            d_cost_d_spectral_freqs[d, :] += (cost_plus-cost)/self.grad_epsilon
-        return d_cost_d_spectral_freqs
+            d_cost_d_freqs[d, :] += (cost_plus-self.last_cost)/self.grad_epsilon
+        return d_cost_d_freqs
 
     def save(self, path):
         prior_settings = (self.M, self.hashed_name)

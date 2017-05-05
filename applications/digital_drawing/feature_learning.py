@@ -145,7 +145,7 @@ def get_training_data():
 X, y = get_training_data()
 
 gp = GomPlex(30)
-gp.fit(X, y, opt_rate=1e-1, max_iter=500, iter_tol=30, nlml_tol=1e-4, plot=False)
+gp.fit(X, y, opt_rate=1, max_iter=500, iter_tol=50, nlml_tol=1e-3, plot=False)
 
 fig = plt.figure()
 ax = fig.gca(projection='3d')
