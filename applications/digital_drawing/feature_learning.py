@@ -11,13 +11,16 @@ import os, fnmatch
 import pandas as pd
 import matplotlib.pyplot as plt
 from bisect import bisect_left
-from GomPlex import GomPlex, Scaler
 
+from GomPlex import *
+
+MODEL_PATH = 'feature_learner.pkl'
 DRAWING_RAW_DATA_PATH = 'drawing_raw_data.csv'
 drawing_raw_data_df = pd.read_csv(DRAWING_RAW_DATA_PATH, index_col=0, header=0)
 PIXEL_CENTIMETER = 62.992126
 
 in_centimeter = True
+metric = Metric('nmse')
 forecast_step = 1
 sampling_points = 50
 stroke_size_tol, stroke_length_tol = 10, 1
@@ -126,15 +129,17 @@ def get_training_data(test_proportion=0.3):
     num_ci = len(ci_subjects)
     test_ci = int(num_ci*test_proportion)
     rand_ci = npr.choice(list(range(num_ci)), test_ci, replace=False)
-    rand_ci_train = list(set(ci_subjects).different(rand_ci))
+    rand_ci = ci_subjects[rand_ci]
+    rand_ci_train = list(set(ci_subjects).difference(rand_ci))
     nonci_subjects = drawing_raw_data_df[ci_data==0].index
     num_nonci = len(nonci_subjects)
     test_nonci = int(num_nonci*test_proportion)
     rand_nonci = npr.choice(list(range(num_nonci)), test_nonci, replace=False)
-    rand_nonci_train = list(set(ci_subjects).different(rand_ci))
-    subjects_for_testing = rand_ci+rand_nonci
+    rand_nonci = nonci_subjects[rand_nonci]
+    rand_nonci_train = list(set(ci_subjects).difference(rand_ci))
+    subjects_for_testing = rand_ci.tolist()+rand_nonci.tolist()
     subjects_for_training = rand_ci_train+rand_nonci_train
-    for subject_id in drawing_raw_data_df.index:
+    for subject_id in subjects_for_training:
         d_X = decode(drawing_raw_data_df['X'][subject_id])
         d_Y = decode(drawing_raw_data_df['Y'][subject_id])
         d_W = decode(drawing_raw_data_df['W'][subject_id])
@@ -157,18 +162,59 @@ def get_training_data(test_proportion=0.3):
             EDU_cols = ['Uneducated', 'Primary', 'Secondary', 'University']
             EDU = np.array(drawing_raw_data_df[EDU_cols].loc[subject_id])
             input = np.hstack((input, EDU*np.ones((input.shape[0], 1))))
-        X = input if(X is None) else np.vstack((X, input))
-        y = target if(y is None) else np.vstack((y, target))
-    return X, y
+        X_train = input if(X_train is None) else np.vstack((X_train, input))
+        y_train = target if(y_train is None) else np.vstack((y_train, target))
+    for subject_id in subjects_for_testing:
+        d_X = decode(drawing_raw_data_df['X'][subject_id])
+        d_Y = decode(drawing_raw_data_df['Y'][subject_id])
+        d_W = decode(drawing_raw_data_df['W'][subject_id])
+        d_T = decode(drawing_raw_data_df['T'][subject_id])
+        if(len(d_X) < sampling_points):
+            continue
+        if(in_centimeter):
+            d_X /= PIXEL_CENTIMETER
+            d_Y /= PIXEL_CENTIMETER
+        input, target = get_steps_ahead_forecasting_data(d_X, d_Y, d_W, d_T)
+        CI = np.array(ci_data[subject_id])
+        input = np.hstack((CI*np.ones((input.shape[0], 1)), input))
+        if(age):
+            AGE = np.array(drawing_raw_data_df['Age'][subject_id])
+            input = np.hstack((input, AGE*np.ones((input.shape[0], 1))))
+        if(gender):
+            GENDER = np.array(drawing_raw_data_df['Male'][subject_id])
+            input = np.hstack((input, GENDER*np.ones((input.shape[0], 1))))
+        if(edu_level):
+            EDU_cols = ['Uneducated', 'Primary', 'Secondary', 'University']
+            EDU = np.array(drawing_raw_data_df[EDU_cols].loc[subject_id])
+            input = np.hstack((input, EDU*np.ones((input.shape[0], 1))))
+        X_test = input if(X_test is None) else np.vstack((X_test, input))
+        y_test = target if(y_test is None) else np.vstack((y_test, target))
+    return X_train, y_train, X_test, y_test
 
 print('# Preprocessing Raw Drawing Data')
 X_train, y_train, X_test, y_test = get_training_data()
+print('  Gathered %d Training Samples.'%(X_train.shape[0]))
+print('  Gathered %d Testing Samples.'%(X_test.shape[0]))
 print('  Done.')
 
-print('# Training GomPlex')
-gp = GomPlex(20)
-gp.fit(X, y, opt_rate=1, max_iter=500, iter_tol=30, cost_tol=1e-3, plot=True)
-print('  Done.')
+while(True):
+    
+    print('# Training GomPlex')
+    gp = GomPlex(30)
+    gp.fit(X_train, y_train, opt_rate=1, cost_tol=1, plot=True)
+    print('  Done.')
+    
+    print('# Choosing GomPlex Models')
+    if(not os.path.exists(MODEL_PATH)):
+        gp.save(MODEL_PATH)
+    else:
+        best_gp = GomPlex().load(MODEL_PATH)
+        best_gp_score = metric.eval(y_test, *best_gp.predict(X_test))
+        new_gp_score = metric.eval(y_test, *gp.predict(X_test))
+        if(new_gp_score < best_gp_score):
+            gp.save(MODEL_PATH)
+    print('  Found Better Model!')
+    print('  Done.')
 
 fig = plt.figure()
 ax = fig.gca(projection='3d')

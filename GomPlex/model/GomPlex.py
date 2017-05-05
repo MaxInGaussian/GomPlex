@@ -16,7 +16,7 @@ class GomPlex(object):
     X_scaler, y_scaler = None, None
     grad_epsilon = 1e-8
     
-    def __init__(self, sparsity):
+    def __init__(self, sparsity=20):
         self.M = sparsity
         self.hashed_name = ''.join(npr.choice(list('ABCDEFGH'), 5))+str(self.M)
         self.visualizer = Visualizer(self)
@@ -46,7 +46,8 @@ class GomPlex(object):
         if(scaled):
             mu = self.y_scaler.eval(mu, inv=True)
         noise = self.noise_real+self.noise_imag*1j
-        std = np.sqrt(noise*(1+np.diagonal(Phi.dot(self.inv_A.dot(Phi.conj().T)))))[:, None]
+        std = np.sqrt(noise*(1+np.diagonal(
+            Phi.dot(self.inv_A.dot(Phi.conj().T)))))[:, None]
         if(scaled):
             std *= (self.y_scaler._r_std_+self.y_scaler._i_std_*1j)
         return mu, std
@@ -94,16 +95,8 @@ class GomPlex(object):
     def get_cost(self):
         return self.get_cv_metric(1, 'nlml')
 
-    def get_nlml(self):
-        noise = self.noise_real+self.noise_imag*1j
-        goodness_of_fit = (self.y.conj().T.dot(self.y-self.mu))/noise
-        covariance_penalty = np.sum(np.log(np.diagonal(self.T)))
-        noise_penalty = (self.N-self.M)*np.log(noise)
-        nlml = goodness_of_fit+covariance_penalty+noise_penalty
-        return np.absolute(nlml[0, 0])
-
     def get_cv_metric(self, n_folds, metric):
-        cv_metric = Metric(self, metric)
+        cv_metric = Metric(metric, self)
         cv_results = []
         data = np.hstack((self.X.copy(), self.y.copy()))
         npr.shuffle(data)
@@ -176,13 +169,9 @@ class GomPlex(object):
         return d_cost_d_freqs
 
     def save(self, path):
-        prior_settings = (self.M, self.hashed_name)
-        raw_data = (self.N, self.D, self.X_scaler, self.y_scaler)
-        hyper_params = (self.noise, self.kernel_scale, self.length_scales, self.Omega)
-        computed_matrices = (self.R, self.alpha)
-        performances = (self.Nmse, self.mnlp)
-        save_pack = [prior_settings, raw_data, hyper_params,
-                     computed_matrices, performances]
+        save_pack = [self.noise_imag, self.noise_real, self.kernel_scale,
+            self.spectral_freqs, self.X_scaler, self.y_scaler, self.T,
+            self.inv_A, self.alpha, self.N, self.hashed_name]
         import pickle
         with open(path, "wb") as save_f:
             pickle.dump(save_pack, save_f, pickle.HIGHEST_PROTOCOL)
@@ -191,11 +180,19 @@ class GomPlex(object):
         import pickle
         with open(path, "rb") as load_f:
             load_pack = pickle.load(load_f)
-        self.M, self.hashed_name = load_pack[0]
-        self.N, self.D, self.X_scaler, self.y_scaler = load_pack[1]
-        self.noise, self.kernel_scale, self.length_scales, self.Omega = load_pack[2]
-        self.R, self.alpha = load_pack[3]
-        self.Nmse, self.mnlp = load_pack[4]
+            i = 0
+            self.noise_imag = load_pack[i];i+=1
+            self.noise_real = load_pack[i];i+=1
+            self.kernel_scale = load_pack[i];i+=1
+            self.spectral_freqs = load_pack[i];i+=1
+            self.X_scaler = load_pack[i];i+=1
+            self.y_scaler = load_pack[i];i+=1
+            self.T = load_pack[i];i+=1
+            self.inv_A = load_pack[i];i+=1
+            self.alpha = load_pack[i];i+=1
+            self.N = load_pack[i];i+=1
+            self.hashed_name = load_pack[i]
+        return self
     
     
     

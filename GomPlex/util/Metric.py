@@ -20,10 +20,10 @@ class Metric(object):
         "nlml"
     ]
     
-    def __init__(self, gp, metric):
-        assert metric in self.metrics, "Invalid metric!"        
+    def __init__(self, metric, gp=None):
+        assert metric in self.metrics, "Invalid metric!"
+        self.metric = metric  
         self.gp = gp
-        self.metric = metric
 
     def eval(self, target, mu_pred, std_pred):
         return getattr(self, self.metric)(target, mu_pred, std_pred)
