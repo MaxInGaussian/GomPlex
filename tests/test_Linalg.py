@@ -14,10 +14,10 @@ from GomPlex import *
 time_reps = 1
 N, M, K, D = 1000, 500, 10, 30
 X = .5*np.random.rand(N, D)
-Omega = np.random.randn(D, K)
-X_nfft = X.dot(Omega)
+spectral_freqs = np.random.randn(D, K)
+X_nfft = X.dot(spectral_freqs)
 x = X_nfft.ravel()
-f = np.time_reps(np.sin(-20*np.pi*np.mean(X_nfft, 1)), K)+0j
+f = np.repeat(np.sin(-20*np.pi*np.mean(X_nfft, 1)), K)+0j
 f_hat = np.random.randn(M)+0j
 noise = 1e-2
 y = f+np.random.randn(N*K)*np.sqrt(noise)

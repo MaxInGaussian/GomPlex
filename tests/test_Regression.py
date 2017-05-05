@@ -10,7 +10,7 @@ import matplotlib as mpl
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 
-from GomPlex import GomPlex
+from GomPlex import *
 
 fun1 = lambda x: x*np.sin(x)
 fun2 = lambda x: np.sin(x)+x*np.cos(x)
@@ -21,8 +21,8 @@ y_i = fun2(x)+np.random.randn(*x.shape)*0.3
 X, y = x[:, None], (y_r+y_i*1j)[:, None]
 
 print('test of GomPlex')
-gp = GomPlex(20)
-gp.fit(X, y, opt_rate=1, max_iter=500, iter_tol=50, nlml_tol=1e-4)
+gp = GomPlex(100)
+gp.fit(X, y, opt_rate=1, max_iter=500, iter_tol=50, nlml_tol=1e-4, plot=True)
 
 mpl.rcParams['legend.fontsize'] = 10
 

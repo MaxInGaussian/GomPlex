@@ -27,40 +27,54 @@ class Scaler(object):
         return getattr(self, self.scaler)(np.complex_(matrix)+0j)
 
     def minmax_init(self, matrix):
-        self.__r_min__ = np.min(matrix.real, axis=0)
-        self.__r_max__ = np.max(matrix.real, axis=0)
-        if(np.any(self.__r_min__ == self.__r_max__)):
-            self.__r_max__ += .5
-            self.__r_min__ -= .5
-        self.__i_min__ = np.min(matrix.imag, axis=0)
-        self.__i_max__ = np.max(matrix.imag, axis=0)
-        if(np.any(self.__i_min__ == self.__i_max__)):
-            self.__i_max__ += .5
-            self.__i_min__ -= .5
+        self._r_min_ = np.min(matrix.real, axis=0)
+        self._r_max_ = np.max(matrix.real, axis=0)
+        if(np.any(self._r_min_ == self._r_max_)):
+            self._r_max_ += .5
+            self._r_min_ -= .5
+        if(np.any(np.iscomplex(matrix))):
+            self._i_min_ = np.min(matrix.imag, axis=0)
+            self._i_max_ = np.max(matrix.imag, axis=0)
+            if(np.any(self._i_min_ == self._i_max_)):
+                self._i_max_ += .5
+                self._i_min_ -= .5
 
     def minmax(self, matrix):
-        return (matrix.real-self.__r_min__)/(self.__r_max__-self.__r_min__)-.5+\
-            ((matrix.imag-self.__i_min__)/(self.__i_max__-self.__i_min__)-.5)*1j
+        res = (matrix.real-self._r_min_)/(self._r_max_-self._r_min_)-.5
+        if(np.any(np.iscomplex(matrix))):
+            res = res+0j
+            res += ((matrix.imag-self._i_min_)/(self._i_max_-self._i_min_)-.5)*1j
+        return res
 
     def minmax_inv(self, matrix):
-        return (matrix.real+.5)*(self.__r_max__-self.__r_min__)+self.__r_min__+\
-            ((matrix.imag+.5)*(self.__i_max__-self.__i_min__)+self.__i_min__)*1j
+        res = (matrix.real+.5)*(self._r_max_-self._r_min_)+self._r_min_
+        if(np.any(np.iscomplex(matrix))):
+            res = res+0j
+            res += ((matrix.imag+.5)*(self._i_max_-self._i_min_)+self._i_min_)*1j
+        return res
 
     def normal_init(self, matrix):
-        self.__r_mu__ = np.mean(matrix.real, axis=0)
-        self.__r_std__ = np.std(matrix.real, axis=0)
-        if(np.any(self.__r_std__ == 0)):
-            self.__r_std__ += 1e-6
-        self.__i_mu__ = np.mean(matrix.imag, axis=0)
-        self.__i_std__ = np.std(matrix.imag, axis=0)
-        if(np.any(self.__i_std__ == 0)):
-            self.__i_std__ += 1e-6
+        self._r_mu_ = np.mean(matrix.real, axis=0)
+        self._r_std_ = np.std(matrix.real, axis=0)
+        if(np.any(self._r_std_ == 0)):
+            self._r_std_ += 1e-6
+        if(np.any(np.iscomplex(matrix))):
+            self._i_mu_ = np.mean(matrix.imag, axis=0)
+            self._i_std_ = np.std(matrix.imag, axis=0)
+            if(np.any(self._i_std_ == 0)):
+                self._i_std_ += 1e-6
 
     def normal(self, matrix):
-        return (matrix.real-self.__r_mu__)/self.__r_std__+\
-            (matrix.imag-self.__i_mu__)/self.__i_std__*1j
+        res = (matrix.real-self._r_mu_)/self._r_std_
+        if(np.any(np.iscomplex(matrix))):
+            res = res+0j
+            res += (matrix.imag-self._i_mu_)/self._i_std_*1j
+        return res
 
     def normal_inv(self, matrix):
-        return matrix.real*self.__r_std__+self.__r_mu__+\
-            (matrix.imag*self.__i_std__+self.__i_mu__)*1j
+        res = matrix.real*self._r_std_+self._r_mu_
+        if(np.any(np.iscomplex(matrix))):
+            res = res+0j
+            res += (matrix.imag*self._i_std_+self._i_mu_)*1j
+        return res
     

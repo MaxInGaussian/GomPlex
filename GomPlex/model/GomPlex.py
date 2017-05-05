@@ -7,8 +7,7 @@ import random
 import numpy as np
 import numpy.random as npr
 from scipy import linalg
-
-from .. import *
+from .. import Scaler, Metric, Trainer, Visualizer
 
 class GomPlex(object):
     
@@ -93,7 +92,7 @@ class GomPlex(object):
         self.mu = Phi.dot(self.alpha)
     
     def get_cost(self):
-        return self.get_cv_metric(2, 'nlml')
+        return self.get_cv_metric(1, 'nlml')
 
     def get_nlml(self):
         noise = self.noise_real+self.noise_imag*1j

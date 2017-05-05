@@ -74,7 +74,8 @@ def solve_Phi_algo_1(y, x, M, sigma=2, tol=1e-8):
     r = y-nfft(x, f_hat, M, sigma, tol)
     _z = adj_nfft(x, r, M, sigma, tol)
     p = _z.copy()
-    while(True):
+    n = M*sigma
+    for _ in range(n):
         v = nfft(x, p, M, sigma, tol)
         a = _z.conj().T.dot(_z)/v.conj().T.dot(v)
         f_hat += a*p
@@ -82,7 +83,7 @@ def solve_Phi_algo_1(y, x, M, sigma=2, tol=1e-8):
         z = adj_nfft(x, r, M, sigma, tol)
         b = z.conj().T.dot(z)/_z.conj().T.dot(_z)
         p = b*p+z
-        if(np.abs(z).max() < tol):
+        if(np.mean(np.absolute(z)) < tol):
             break
         _z = z
     return f_hat
@@ -103,7 +104,7 @@ def solve_Phi_algo_2(y, x, M, sigma=2, tol=1e-8):
     r = y-faster_nfft(n, q, mat, f_hat, M, sigma, tol)
     _z = faster_adj_nfft(n, q, mat, r, M, sigma, tol)
     p = _z.copy()
-    while(True):
+    for _ in range(n):
         v = faster_nfft(n, q, mat, p, M, sigma, tol)
         a = _z.conj().T.dot(_z)/v.conj().T.dot(v)
         f_hat += a*p
@@ -111,7 +112,7 @@ def solve_Phi_algo_2(y, x, M, sigma=2, tol=1e-8):
         z = faster_adj_nfft(n, q, mat, r, M, sigma, tol)
         b = z.conj().T.dot(z)/_z.conj().T.dot(_z)
         p = b*p+z
-        if(np.abs(z).max() < tol):
+        if(np.mean(np.absolute(z)) < tol):
             break
         _z = z
     return f_hat
@@ -121,7 +122,8 @@ def solve_Phi_H_algo_1(y, x, M, sigma=2, tol=1e-8):
     r = y-adj_nfft(x, f_hat, M, sigma, tol)
     _z = nfft(x, r, M, sigma, tol)
     p = _z.copy()
-    while(True):
+    n = M*sigma
+    for _ in range(n):
         v = adj_nfft(x, p, M, sigma, tol)
         a = _z.conj().T.dot(_z)/v.conj().T.dot(v)
         f_hat += a*p
@@ -129,7 +131,7 @@ def solve_Phi_H_algo_1(y, x, M, sigma=2, tol=1e-8):
         z = nfft(x, r, M, sigma, tol)
         b = z.conj().T.dot(z)/_z.conj().T.dot(_z)
         p = b*p+z
-        if(np.abs(z).max() < tol):
+        if(np.mean(np.absolute(z)) < tol):
             break
         _z = z
     return f_hat
@@ -150,7 +152,7 @@ def solve_Phi_H_algo_2(y, x, M, sigma=2, tol=1e-8):
     r = y-faster_adj_nfft(n, q, mat, f_hat, M, sigma, tol)
     _z = faster_nfft(n, q, mat, r, M, sigma, tol)
     p = _z.copy()
-    while(True):
+    for _ in range(n):
         v = faster_adj_nfft(n, q, mat, p, M, sigma, tol)
         a = _z.conj().T.dot(_z)/v.conj().T.dot(v)
         f_hat += a*p
@@ -158,7 +160,7 @@ def solve_Phi_H_algo_2(y, x, M, sigma=2, tol=1e-8):
         z = faster_nfft(n, q, mat, r, M, sigma, tol)
         b = z.conj().T.dot(z)/_z.conj().T.dot(_z)
         p = b*p+z
-        if(np.abs(z).max() < tol):
+        if(np.mean(np.absolute(z)) < tol):
             break
         _z = z
     return f_hat
@@ -190,17 +192,14 @@ def solve_A_algo_2(y, x, M, noise, tol=1e-8):
     f_hat -= noise*solve_A_tilde_algo_2(f_hat, x, M)
     return f_hat
 
-def Phi(X, spectral_freqs):
-    X_sparse = self.X.dot(self.spectral_freqs)
-    Phi_const = np.sqrt(self.kernel_scale/self.M)
-    Phi = Phi_const*np.exp(2j*np.pi*X_sparse)
-    return Phi
-
-def Phi_nfft(X, spectral_freqs):
+def get_x_nfft(X, spectral_freqs, kernel_scale, M):
+    K = spectral_freqs.shape[1]
     X_sparse = X.dot(spectral_freqs)
-    k = -(M//2)+np.arange(M)
-    np.exp(-2j*np.pi*k*X_sparse)
-    return W_H.conj().T
+    X_sparse -= np.log(np.sqrt(kernel_scale/(M*K)))
+    return X_sparse.ravel()
+
+def get_y_nfft(y, K):
+    return np.repeat(y.ravel(), K)
 
 def interp_Phi_by_basis(Phi, phi_basis):
     W_H = np.zeros((phi_basis.shape[0], Phi.shape[0]))+0j
