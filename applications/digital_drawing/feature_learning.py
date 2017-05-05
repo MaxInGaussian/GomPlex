@@ -146,11 +146,15 @@ def get_training_data():
         X = input if(X is None) else np.vstack((X, input))
         y = target if(y is None) else np.vstack((y, target))
     return X, y
-        
-X, y = get_training_data()
 
-gp = GomPlex(30)
-gp.fit(X, y, opt_rate=1, max_iter=500, iter_tol=50, cost_tol=1e-3, plot=True)
+print('# Preprocessing Raw Drawing Data')
+X_train, y_train = get_training_data()
+print('  Done.')
+
+print('# Training GomPlex')
+gp = GomPlex(20)
+gp.fit(X, y, opt_rate=1, max_iter=500, iter_tol=30, cost_tol=1e-3, plot=True)
+print('  Done.')
 
 fig = plt.figure()
 ax = fig.gca(projection='3d')

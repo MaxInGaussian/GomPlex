@@ -14,7 +14,7 @@ __all__ = [
 
 class Visualizer(object):
     
-    def __init__(self, gp, metric='nmse', plot_limit=80):
+    def __init__(self, gp, metric='nmse', plot_limit=150):
         self.gp = gp
         self.metric = metric
         self.plot_limit = plot_limit
@@ -71,10 +71,10 @@ class Visualizer(object):
 
     def plot_training_general(self):
         self.fig.suptitle(self.gp.__str__(), fontsize=15)
-        ax = self.fig.add_subplot()
+        ax = self.fig.add_subplot(111)
         plt.xlabel('ITERATION', fontsize=13)
         def animate(trainer):
-            if(trainer.iter == 0):
+            if(trainer.iter == 1):
                 data_x, data_y = [], []
             else:
                 data_x = ax.lines[0].get_xdata().tolist()
@@ -83,8 +83,8 @@ class Visualizer(object):
             data_y.append(self.gp.last_cost)
             ax.cla()
             ax.plot(data_x[-self.plot_limit:], data_y[-self.plot_limit:],
-                color='r', linewidth=2.0, label='MIN OBJ')
-            handles, labels = ax1.get_legend_handles_labels()
+                color='r', linewidth=2.0, label='COST')
+            handles, labels = ax.get_legend_handles_labels()
             ax.legend(handles, labels, loc='upper center',
                 bbox_to_anchor=(0.5, 1.05), ncol=1, fancybox=True)   
             plt.pause(0.01)
