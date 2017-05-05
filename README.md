@@ -88,7 +88,7 @@ gp.fit(X, y, plot=True)
 <img src ="plots/toy_1d_example_regression.png" />
 
 # License
-Copyright (c) 2016, Max W. Y. Lam
+Copyright (c) 2017, Max W. Y. Lam
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
