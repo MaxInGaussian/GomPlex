@@ -22,11 +22,11 @@ processes. Due to mathematical brevity and elegance, Gaussian process was
 employed to describe the distribution over functions. [Carl Edward Rasmussen and
 Christopher K. I. Williams](http://www.gaussianprocess.org/gpml/), who pioneer
 and popularize the idea of using Gaussian processes for machine learning tasks,
-emphasize that one of the greatest advantages of Gaussian process is that we can
+emphasized that Gaussian process is particularly useful in machine learning as we
 integrate all possible functions over the function distribution (Gaussian
-process), and obtain an analytical solution because of nice properties of
-Gaussian. It is pinpointed that this Bayesian routine is prefered over
-optimization on a certain estimate of function.
+process), and obtain an analytically tractable solution Gaussian properties.
+They also pinpointed that this Bayesian routine is prefered over
+optimization by certain heuristic criterions.
 
 The idea of GomPlex came from [Quasi-Monte Carlo Feature Maps](http://jmlr.org/papers/volume17/14-538/14-538.pdf)
 and [Fourier features](https://papers.nips.cc/paper/3182-random-features-for-large-scale-kernel-machines.pdf)

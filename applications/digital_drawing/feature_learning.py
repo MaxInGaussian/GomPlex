@@ -6,6 +6,7 @@
 from sys import path
 path.append("../../")
 import numpy as np
+import numpy.random as npr
 import os, fnmatch
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -117,9 +118,22 @@ def get_steps_ahead_forecasting_data(d_X, d_Y, d_W, d_T):
             forecast_target.append([d_X[forecast_coord]+1j*d_Y[forecast_coord]])
     return np.array(forecast_input), np.array(forecast_target)
 
-def get_training_data():
-    X, y = None, None
+def get_training_data(test_proportion=0.3):
+    X_train, y_train, X_test, y_test = None, None, None, None
     decode = lambda str: np.array(list(map(float, str.split('|'))))
+    ci_data = drawing_raw_data_df['Cognitive Impairment']
+    ci_subjects = drawing_raw_data_df[ci_data==1].index
+    num_ci = len(ci_subjects)
+    test_ci = int(num_ci*test_proportion)
+    rand_ci = npr.choice(list(range(num_ci)), test_ci, replace=False)
+    rand_ci_train = list(set(ci_subjects).different(rand_ci))
+    nonci_subjects = drawing_raw_data_df[ci_data==0].index
+    num_nonci = len(nonci_subjects)
+    test_nonci = int(num_nonci*test_proportion)
+    rand_nonci = npr.choice(list(range(num_nonci)), test_nonci, replace=False)
+    rand_nonci_train = list(set(ci_subjects).different(rand_ci))
+    subjects_for_testing = rand_ci+rand_nonci
+    subjects_for_training = rand_ci_train+rand_nonci_train
     for subject_id in drawing_raw_data_df.index:
         d_X = decode(drawing_raw_data_df['X'][subject_id])
         d_Y = decode(drawing_raw_data_df['Y'][subject_id])
@@ -131,7 +145,7 @@ def get_training_data():
             d_X /= PIXEL_CENTIMETER
             d_Y /= PIXEL_CENTIMETER
         input, target = get_steps_ahead_forecasting_data(d_X, d_Y, d_W, d_T)
-        CI = np.array(drawing_raw_data_df['Cognitive Impairment'][subject_id])
+        CI = np.array(ci_data[subject_id])
         input = np.hstack((CI*np.ones((input.shape[0], 1)), input))
         if(age):
             AGE = np.array(drawing_raw_data_df['Age'][subject_id])
@@ -148,7 +162,7 @@ def get_training_data():
     return X, y
 
 print('# Preprocessing Raw Drawing Data')
-X_train, y_train = get_training_data()
+X_train, y_train, X_test, y_test = get_training_data()
 print('  Done.')
 
 print('# Training GomPlex')
