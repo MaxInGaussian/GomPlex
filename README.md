@@ -79,21 +79,12 @@ gp.fit(X, y, plot=True)
 ## Toy Example: Custom 1-d Function
 
 ### True Function
-<p align="center">
-<img src ="http://www.sciweavers.org/upload/Tex2Img_1493629203/eqn.png" />
-</p>
 <img src ="plots/toy_1d_example_true_function.png" />
 
 ### Synthesize Data
-<p align="center">
-<img src ="http://www.sciweavers.org/upload/Tex2Img_1493629264/eqn.png" />
-</p>
 <img src ="plots/toy_1d_example_synthesize_data.png" />
 
 ### Complex Regression with GomPlex
-<p align="center">
-<img src ="http://www.sciweavers.org/upload/Tex2Img_1493630490/eqn.png" />
-</p>
 <img src ="plots/toy_1d_example_regression.png" />
 
 # License
