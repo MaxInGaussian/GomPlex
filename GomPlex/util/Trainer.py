@@ -34,7 +34,7 @@ class Trainer(object):
                 animate(self)
             cost = self.gp.get_cost()
             self.cost_diff = abs(cost-self.min_cost)
-            print(self.iter, ":", self.min_cost, ':', cost)
+            print("%d:%.8f:%.8f"%(self.iter, self.min_cost, cost))
             if(cost < self.min_cost):
                 if(self.cost_diff < self.cost_tol):
                     self.worse_result += 1

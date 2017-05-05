@@ -51,7 +51,7 @@ class GomPlex(object):
             std *= (self.y_scaler._r_std_+self.y_scaler._i_std_*1j)
         return mu, std
     
-    def init_hyperparams(self, rand_num=100):
+    def init_hyperparams(self, rand_num=1):
         best_cost = np.Infinity
         best_hyperparams = None
         for _ in range(rand_num):
