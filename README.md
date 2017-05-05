@@ -34,9 +34,9 @@ and [Fourier features](https://papers.nips.cc/paper/3182-random-features-for-lar
 kernel function. In this setup, the randomized feature maps is no more than an approximation method.
 Yet, in GomPlex, we take a new scope for the association of feature maps and kernel function.
 We treat the feature maps as hyperparameters, and result in optimization of the mapping on the Gaussian process regression likelihood.
-In this sence, we optimize the kernel properties without explicitly define a kernel.
+In this sence, we optimize a kernel by its properties without explicitly defining a kernel.
 One significant hurdle of this approach is the explosive amount of hyperparameters,
-which in turns require careful regularization on optimization.
+which in turns requires careful regularization on optimization.
 
 ### Highlights of GomPlex
 
