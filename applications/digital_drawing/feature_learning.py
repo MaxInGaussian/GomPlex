@@ -193,24 +193,25 @@ def get_training_data(test_proportion=0.3):
         y_test = target if(y_test is None) else np.vstack((y_test, target))
     return X_train, y_train, X_test, y_test
 
-print('# Preprocessing Raw Drawing Data')
-X_train, y_train, X_test, y_test = get_training_data()
-print('  Gathered %d Training Samples.'%(X_train.shape[0]))
-print('  Gathered %d Testing Samples.'%(X_test.shape[0]))
-print('  Done.')
 
 while(True):
     
+    print('# Preprocessing Raw Drawing Data')
+    X_train, y_train, X_test, y_test = get_training_data()
+    print('  Gathered %d Training Samples.'%(X_train.shape[0]))
+    print('  Gathered %d Testing Samples.'%(X_test.shape[0]))
+    print('  Done.')
+    
     print('# Training GomPlex')
     gp = GomPlex(npr.randint(int(np.log(X_train.shape[0]))*5)+5)
-    gp.fit(X_train, y_train, opt_rate=1, plot=True)
+    gp.fit(X_train, y_train, opt_rate=1, iter_tol=30, plot=True)
     print('  Done.')
     
     print('# Choosing GomPlex Models')
     if(not os.path.exists(MODEL_PATH)):
         gp.save(MODEL_PATH)
     else:
-        best_gp = GomPlex().load(MODEL_PATH)
+        best_gp = GomPlex().load(MODEL_PATH).fit(X_train, y_train)
         best_gp_score = metric.eval(y_test, *best_gp.predict(X_test))
         new_gp_score = metric.eval(y_test, *gp.predict(X_test))
         print('  new trained model   - %s %.6f'%(metric.metric, new_gp_score))

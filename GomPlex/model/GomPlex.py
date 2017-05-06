@@ -26,14 +26,18 @@ class GomPlex(object):
     
     def fit(self, X, y,
         opt_rate=1, max_iter=500, iter_tol=50, early_stopping=10, plot=False):
-        trainer = Trainer(self, opt_rate, max_iter, iter_tol, early_stopping)
         self.X_scaler = Scaler('minmax', X)
         self.y_scaler = Scaler('normal', y)
         self.X = self.X_scaler.eval(X)
         self.y = self.y_scaler.eval(y)
         self.D = self.X.shape[1]
-        self.init_hyperparams()
-        trainer.train(self.visualizer.plot_training() if plot else None)
+        if(self.spectral_freqs is None):
+            self.init_hyperparams()
+            trainer = Trainer(self, opt_rate, max_iter, iter_tol, early_stopping)
+            trainer.train(self.visualizer.plot_training() if plot else None)
+        else:
+            self.train()
+        return self
     
     def predict(self, new_X, scaled=True):
         X = np.array(new_X).copy()
@@ -192,6 +196,7 @@ class GomPlex(object):
             self.alpha = load_pack[i];i+=1
             self.N = load_pack[i];i+=1
             self.hashed_name = load_pack[i]
+            self.D, self.M = self.spectral_freqs.shape
         return self
     
     
