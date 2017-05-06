@@ -5,6 +5,8 @@
 
 from sys import path
 path.append("../")
+import warnings
+warnings.filterwarnings("ignore")
 import numpy as np
 import matplotlib as mpl
 from mpl_toolkits.mplot3d import Axes3D
@@ -21,10 +23,36 @@ y_i = fun2(x)+np.random.randn(*x.shape)*0.3
 X, y = x[:, None], (y_r+y_i*1j)[:, None]
 
 print('test of GomPlex')
-gp = GomPlex(100)
-gp.fit(X, y, opt_rate=1, max_iter=500, iter_tol=30, early_stopping=10)
-
+gp = GomPlex(30, mean_only=True)
+gp.fit(X, y)
 mpl.rcParams['legend.fontsize'] = 10
+
+fig = plt.figure()
+ax = fig.gca(projection='3d')
+x_plot = np.linspace(-2*np.pi, 2*np.pi, 300)
+ax.plot(x_plot, fun1(x_plot), fun2(x_plot), 'b-', linewidth=2, label='true function')
+ax.legend()
+ax.set_xlabel('x')
+ax.set_ylabel('Re{y}')
+ax.set_zlabel('Im{y}')
+ax.set_xlim([-2.5*np.pi, 2.5*np.pi])
+ax.set_ylim([-2.5*np.pi, 2.5*np.pi])
+ax.set_zlim([-2.5*np.pi, 2.5*np.pi])
+fig.savefig('../plots/toy_1d_example_true_function.png')
+
+fig = plt.figure()
+ax = fig.gca(projection='3d')
+x_plot = np.linspace(-2*np.pi, 2*np.pi, 300)
+ax.scatter(x, y_r, y_i, marker='x', s=30, label='training data')
+ax.legend()
+ax.set_xlabel('x')
+ax.set_ylabel('Re{y}')
+ax.set_zlabel('Im{y}')
+ax.set_xlim([-2.5*np.pi, 2.5*np.pi])
+ax.set_ylim([-2.5*np.pi, 2.5*np.pi])
+ax.set_zlim([-2.5*np.pi, 2.5*np.pi])
+fig.savefig('../plots/toy_1d_example_synthesize_data.png')
+
 fig = plt.figure()
 ax = fig.gca(projection='3d')
 x_plot = np.linspace(-2*np.pi, 2*np.pi, 300)
@@ -41,5 +69,6 @@ ax.set_zlabel('Im{y}')
 ax.set_xlim([-2.5*np.pi, 2.5*np.pi])
 ax.set_ylim([-2.5*np.pi, 2.5*np.pi])
 ax.set_zlim([-2.5*np.pi, 2.5*np.pi])
+fig.savefig('../plots/toy_1d_example_regression.png')
 plt.show()
 

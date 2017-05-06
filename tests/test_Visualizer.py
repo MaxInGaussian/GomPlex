@@ -5,6 +5,8 @@
 
 from sys import path
 path.append("../")
+import warnings
+warnings.filterwarnings("ignore")
 import numpy as np
 from GomPlex import GomPlex
 
@@ -17,5 +19,5 @@ y_i = fun2(x)+np.random.randn(*x.shape)*0.3
 X, y = x[:, None], (y_r+y_i*1j)[:, None]
 
 print('test of Visualizer in GomPlex')
-gp = GomPlex(20)
+gp = GomPlex(30, mean_only=True)
 gp.fit(X, y, plot=True)

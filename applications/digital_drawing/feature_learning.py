@@ -21,6 +21,7 @@ DRAWING_RAW_DATA_PATH = 'drawing_raw_data.csv'
 drawing_raw_data_df = pd.read_csv(DRAWING_RAW_DATA_PATH, index_col=0, header=0)
 PIXEL_CENTIMETER = 62.992126
 
+test_proportion = 0.5
 in_centimeter = True
 metric = Metric('nmse')
 forecast_step = 1
@@ -47,7 +48,7 @@ def show_drawing_data(d_X, d_Y, spectrum, d_sI=None, label="Time"):
 
 def preprocessing(d_X, d_Y, d_W, d_T, plot=False):
     coordinates, strokes, coordinate_to_stroke = [], [], {}
-    d_L, d_V = [], []
+    d_L, d_V, d_Di = [], [], []
     stop_points = np.where(d_W==1)[0]
     if(plot):
         show_drawing_data(d_X, d_Y, np.cumsum(d_T))
@@ -91,23 +92,32 @@ def preprocessing(d_X, d_Y, d_W, d_T, plot=False):
                 length_diff = d_cL[sampled_coordinate]-d_cL[last_coordinate]
                 time_diff = d_cT[sampled_coordinate]-d_cT[last_coordinate]
                 d_V.append(length_diff/time_diff)
+                di = np.arctan(np.inf if d_X[0] != d_X[sampled_coordinate] else
+                    (d_Y[last_coordinate]-d_Y[sampled_coordinate])/\
+                        (d_X[last_coordinate]-d_X[sampled_coordinate]))
+                d_Di.append(di)
             else:
                 d_V.append(d_cL[sampled_coordinate]/d_cT[sampled_coordinate])
+                di = np.arctan(np.inf if d_X[0] != d_X[sampled_coordinate] else
+                    (d_Y[0]-d_Y[sampled_coordinate])/\
+                        (d_X[0]-d_X[sampled_coordinate]))
+                d_Di.append(di)
     d_X = d_X[sampled_coordinates]
     d_Y = d_Y[sampled_coordinates]
     d_cT = d_cT[sampled_coordinates]
     d_cL = d_cL[sampled_coordinates]
     d_V = np.array(d_V)
+    d_Di = np.array(d_Di)
     if(plot):
         show_drawing_data(d_X, d_Y, d_cT)
         plt.title('drawing data after discretizing')
         show_drawing_data(d_X, d_Y, d_V, d_sI, "Velocity")
         plt.title('drawing data velocity spectrum')
         plt.show()
-    return d_X, d_Y, d_cT, d_cL, d_V, d_sI
+    return d_X, d_Y, d_cT, d_cL, d_V, d_Di, d_sI
 
 def get_steps_ahead_forecasting_data(d_X, d_Y, d_W, d_T):
-    d_X, d_Y, d_cT, d_cL, d_V, d_sI = preprocessing(d_X, d_Y, d_W, d_T)
+    d_X, d_Y, d_cT, d_cL, d_V, d_Di, d_sI = preprocessing(d_X, d_Y, d_W, d_T)
     if(time_faction):
         d_cT = Scaler('minmax', d_cT).eval(d_cT)
     forecast_input, forecast_target = [], []
@@ -116,14 +126,16 @@ def get_steps_ahead_forecasting_data(d_X, d_Y, d_W, d_T):
             continue
         for i in range(len(d_s)-forecast_step):
             input_coord = d_s[i]
-            x, y, ct = d_X[input_coord], d_Y[input_coord], d_cT[input_coord]
-            cl, v = d_cL[input_coord], d_V[input_coord]
+            ct, cl = d_cT[input_coord], d_cL[input_coord]
+            v, di = d_V[input_coord], d_Di[input_coord]
             forecast_coord = d_s[i+forecast_step]
-            forecast_input.append([x, y, ct, cl, v, s])
-            forecast_target.append([d_X[forecast_coord]+1j*d_Y[forecast_coord]])
+            forecast_input.append([ct, cl, v, di, s])
+            x_diff = d_X[forecast_coord]-d_X[input_coord]
+            y_diff = d_Y[forecast_coord]-d_Y[input_coord]
+            forecast_target.append([x_diff+1j*y_diff])
     return np.array(forecast_input), np.array(forecast_target)
 
-def get_training_data(test_proportion=0.3):
+def get_training_data():
     X_train, y_train, X_test, y_test = None, None, None, None
     decode = lambda str: np.array(list(map(float, str.split('|'))))
     ci_data = drawing_raw_data_df['Cognitive Impairment']
@@ -203,18 +215,18 @@ while(True):
     print('  Done.')
     
     print('# Training GomPlex')
-    gp = GomPlex(npr.randint(int(np.log(X_train.shape[0]))*5)+5)
+    gp = GomPlex(npr.randint(int(np.log(X_train.shape[0]))*2)+8)
     gp.fit(X_train, y_train, opt_rate=1, iter_tol=30, plot=True)
     print('  Done.')
     
     print('# Choosing GomPlex Models')
+    new_gp_score = metric.eval(y_test, *gp.predict(X_test))
+    print('  new trained model   - %s %.6f'%(metric.metric, new_gp_score))
     if(not os.path.exists(MODEL_PATH)):
         gp.save(MODEL_PATH)
     else:
         best_gp = GomPlex().load(MODEL_PATH).fit(X_train, y_train)
         best_gp_score = metric.eval(y_test, *best_gp.predict(X_test))
-        new_gp_score = metric.eval(y_test, *gp.predict(X_test))
-        print('  new trained model   - %s %.6f'%(metric.metric, new_gp_score))
         print('  original best model - %s %.6f'%(metric.metric, best_gp_score))
         if(new_gp_score < best_gp_score):
             gp.save(MODEL_PATH)

@@ -29,12 +29,12 @@ class Metric(object):
         return getattr(self, self.metric)(target, mu_pred, std_pred)
 
     def mse(self, target, mu_pred, std_pred):        
-        mse = np.mean(np.square(target-mu_pred))
-        return np.absolute(mse)
+        mse = np.mean(np.absolute(target-mu_pred)**2)
+        return mse
 
     def nmse(self, target, mu_pred, std_pred):
         mse = self.mse(target, mu_pred, std_pred)
-        nmse = mse/np.var(target)
+        nmse = mse/np.var(np.absolute(target))
         return np.absolute(nmse)
 
     def nlpd(self, target, mu_pred, std_pred):        
@@ -51,6 +51,8 @@ class Metric(object):
             np.exp(-self.nlpd(target, mu_pred, std_pred))
     
     def nlml(self, target, mu_pred, std_pred):
+        if(self.gp.mean_only):
+            return self.mse(target, mu_pred, std_pred)
         noise = self.gp.noise_real+self.gp.noise_imag*1j
         goodness_of_fit = (target.conj().T.dot(target-mu_pred))/noise
         covariance_penalty = np.sum(np.log(np.diagonal(self.gp.T)))

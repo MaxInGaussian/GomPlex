@@ -11,12 +11,13 @@ __all__ = [
 
 class Trainer(object):
     
-    def __init__(self, gp, opt_rate, max_iter, iter_tol, early_stopping):
+    def __init__(self, gp, opt_rate, max_iter, iter_tol, diff_tol, early_stop):
         self.gp = gp
         self.opt_rate = opt_rate
         self.max_iter = max_iter
         self.iter_tol = iter_tol
-        self.early_stopping = early_stopping
+        self.diff_tol = diff_tol
+        self.early_stop = early_stop
 
     def train(self, animate=None):
         self.learned_hyperparams = None
@@ -37,11 +38,15 @@ class Trainer(object):
             self.cost_records.append(cost)
             print("  iter %d - best %.8f - update %.8f - %d/%d"%(
                 self.iter, self.min_cost, cost, self.div_count, self.iter_tol))
-            if(np.mean(self.cost_records[-self.early_stopping:]) > 
-                np.mean(self.min_cost_records[-self.early_stopping//2:])):
+            if(np.mean(self.cost_records[-self.early_stop:]) > 
+                np.mean(self.min_cost_records[-self.early_stop//2:]) and
+                    self.iter > self.early_stop):
                 self.div_count += 1
             if(cost < self.min_cost):
-                self.div_count = 0
+                if(self.min_cost-cost > self.diff_tol):
+                    self.div_count = 0
+                else:
+                    self.div_count += 1
                 self.min_cost = cost
                 self.min_cost_records.append(cost)
                 self.learned_hyperparams = hyperparams.copy()
@@ -52,7 +57,7 @@ class Trainer(object):
                 break
     
     def stop_condition(self):
-        if(self.iter==self.max_iter or self.div_count == self.iter_tol):
+        if(self.iter >= self.max_iter or self.div_count >= self.iter_tol):
             return True
         return False
 

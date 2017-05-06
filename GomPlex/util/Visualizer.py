@@ -80,13 +80,13 @@ class Visualizer(object):
                 data_x = ax.lines[0].get_xdata().tolist()
                 data_y = ax.lines[0].get_ydata().tolist()
             data_x.append(trainer.iter)
-            data_y.append(self.gp.last_cost)
+            data_y.append(self.gp.cur_cost)
             ax.cla()
             ax.plot(data_x[-self.plot_limit:], data_y[-self.plot_limit:],
                 color='r', linewidth=2.0, label='COST')
             handles, labels = ax.get_legend_handles_labels()
             ax.legend(handles, labels, loc='upper center',
-                bbox_to_anchor=(0.5, 1.05), ncol=1, fancybox=True)   
+                bbox_to_anchor=(0.5, 1.05), ncol=1, fancybox=True)
             plt.pause(0.01)
         return animate
 
