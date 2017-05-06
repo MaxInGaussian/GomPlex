@@ -37,14 +37,13 @@ class Trainer(object):
             self.cost_records.append(cost)
             print("  iter %d - best %.8f - update %.8f - %d/%d"%(
                 self.iter, self.min_cost, cost, self.div_count, self.iter_tol))
+            if(np.mean(self.cost_records[-self.early_stopping:]) > 
+                np.mean(self.min_cost_records[-self.early_stopping//2:])):
+                self.div_count += 1
             if(cost < self.min_cost):
+                self.div_count = 0
                 self.min_cost = cost
                 self.min_cost_records.append(cost)
-                if(np.mean(self.cost_records[-self.early_stopping:]) > 
-                    np.mean(self.min_cost_records[-self.early_stopping//2:])):
-                    self.div_count += 1
-                else:
-                    self.div_count = 0
                 self.learned_hyperparams = hyperparams.copy()
             else:
                 self.div_count += 1

@@ -217,5 +217,5 @@ while(True):
         print('  original best model - %s %.6f'%(metric.metric, best_gp_score))
         if(new_gp_score < best_gp_score):
             gp.save(MODEL_PATH)
-    print('  Found Better Model!')
+            print('  Found Better Model!')
     print('  Done.')
