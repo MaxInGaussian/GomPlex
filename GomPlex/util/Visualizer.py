@@ -72,7 +72,6 @@ class Visualizer(object):
     def plot_training_general(self):
         self.fig.suptitle(self.gp.__str__(), fontsize=15)
         ax = self.fig.add_subplot(111)
-        plt.xlabel('ITERATION', fontsize=13)
         def animate(trainer):
             if(trainer.iter == 1):
                 data_x, data_y = [], []
@@ -85,8 +84,8 @@ class Visualizer(object):
             ax.plot(data_x[-self.plot_limit:], data_y[-self.plot_limit:],
                 color='r', linewidth=2.0, label='COST')
             handles, labels = ax.get_legend_handles_labels()
-            ax.legend(handles, labels, loc='upper center',
-                bbox_to_anchor=(0.5, 1.05), ncol=1, fancybox=True)
+            ax.set_ylabel(self.gp.cost_type, fontsize=13)
+            ax.set_xlabel('Number of iterations', fontsize=13)
             plt.pause(0.01)
         return animate
 

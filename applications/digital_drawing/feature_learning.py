@@ -16,18 +16,31 @@ from bisect import bisect_left
 
 from GomPlex import *
 
-MODEL_PATH = 'feature_learner.pkl'
+MODEL_PATH = 'feature_learner_'
 DRAWING_RAW_DATA_PATH = 'drawing_raw_data.csv'
 drawing_raw_data_df = pd.read_csv(DRAWING_RAW_DATA_PATH, index_col=0, header=0)
 PIXEL_CENTIMETER = 62.992126
 
-test_proportion = 0.5
+test_proportion = 0.3
 in_centimeter = True
 metric = Metric('nmse')
 forecast_step = 1
 sampling_points = 50
 stroke_size_tol, stroke_length_tol = 10, 1
-time_faction, gender, age, edu_level = True, True, True, True
+time_faction, gender, age, edu_level = False, True, True, False
+if(in_centimeter):
+    MODEL_PATH += "cm_"
+else:
+    MODEL_PATH += "px_"
+if(time_faction):
+    MODEL_PATH += "t"
+if(gender):
+    MODEL_PATH += "g"
+if(age):
+    MODEL_PATH += "a"
+if(edu_level):
+    MODEL_PATH += "e"
+MODEL_PATH += ".pkl"
 
 length = lambda sx, sy, ex, ey: np.sqrt((sx-ex)**2+(sy-ey)**2)
     
@@ -215,8 +228,8 @@ while(True):
     print('  Done.')
     
     print('# Training GomPlex')
-    gp = GomPlex(npr.randint(int(np.log(X_train.shape[0]))*2)+8)
-    gp.fit(X_train, y_train, opt_rate=1, iter_tol=30, plot=True)
+    gp = GomPlex(npr.randint(int(np.log(X_train.shape[0]))*2)+8, True)
+    gp.fit(X_train, y_train, opt_rate=1, diff_tol=1e-5, cv_folds=1, plot=True)
     print('  Done.')
     
     print('# Choosing GomPlex Models')
