@@ -25,11 +25,11 @@ test_proportion = 0.3
 in_centimeter = True
 metric = Metric('nmse')
 forecast_step = 1
-sampling_points = 50
+sampling_points = 100
 stroke_size_tol, stroke_length_tol = 10, 1
-time_faction, gender, age, edu_level = False, True, True, False
+time_faction, gender, age, edu_level = False, True, True, True
 if(in_centimeter):
-    MODEL_PATH += "cm_"
+    MODEL_PATH += "cm_"+"s%d_"%(sampling_points)
 else:
     MODEL_PATH += "px_"
 if(time_faction):
@@ -228,8 +228,8 @@ while(True):
     print('  Done.')
     
     print('# Training GomPlex')
-    gp = GomPlex(npr.randint(int(np.log(X_train.shape[0]))*2)+8, True)
-    gp.fit(X_train, y_train, opt_rate=1, diff_tol=1e-5, cv_folds=1, plot=True)
+    gp = GomPlex(npr.randint(int(np.log(X_train.shape[0]))*3)+8, True)
+    gp.fit(X_train, y_train, opt_rate=1, diff_tol=1e-5, cv_folds=1, plot=False)
     print('  Done.')
     
     print('# Choosing GomPlex Models')
