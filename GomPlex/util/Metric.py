@@ -14,6 +14,7 @@ class Metric(object):
     metrics = [
         "mse",
         "nmse",
+        "mae",
         "nlpd",
         "nlpd_mse",
         "nlpd_nmse",
@@ -35,7 +36,11 @@ class Metric(object):
     def nmse(self, target, mu_pred, std_pred):
         mse = self.mse(target, mu_pred, std_pred)
         nmse = mse/np.var(np.absolute(target))
-        return np.absolute(nmse)
+        return nmse
+
+    def mae(self, target, mu_pred, std_pred):
+        mae = np.mean(np.absolute(target-mu_pred))
+        return mae
 
     def nlpd(self, target, mu_pred, std_pred):        
         nlpd = np.mean(((target-mu_pred)/std_pred)**2+2*np.log(std_pred))
