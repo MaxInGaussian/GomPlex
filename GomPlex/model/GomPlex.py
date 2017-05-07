@@ -118,7 +118,7 @@ class GomPlex(object):
         cv_metric = Metric(metric, self)
         cv_results = []
         data = np.hstack((self.X.copy(), self.y.copy()))
-        npr.shuffle(data)
+        # npr.shuffle(data)
         if(n_folds > 1):
             fold_size = self.N//n_folds
             for i in range(n_folds):

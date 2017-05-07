@@ -21,6 +21,7 @@ DRAWING_RAW_DATA_PATH = 'drawing_raw_data.csv'
 drawing_raw_data_df = pd.read_csv(DRAWING_RAW_DATA_PATH, index_col=0, header=0)
 PIXEL_CENTIMETER = 62.992126
 
+cv_folds = 3
 test_proportion = 0.3
 in_centimeter = True
 metric = Metric('nmse')
@@ -105,13 +106,14 @@ def preprocessing(d_X, d_Y, d_W, d_T, plot=False):
                 length_diff = d_cL[sampled_coordinate]-d_cL[last_coordinate]
                 time_diff = d_cT[sampled_coordinate]-d_cT[last_coordinate]
                 d_V.append(length_diff/time_diff)
-                di = np.arctan(np.inf if d_X[0] != d_X[sampled_coordinate] else
-                    (d_Y[last_coordinate]-d_Y[sampled_coordinate])/\
-                        (d_X[last_coordinate]-d_X[sampled_coordinate]))
+                di = np.arctan(np.inf
+                    if d_X[last_coordinate] == d_X[sampled_coordinate] else
+                        (d_Y[last_coordinate]-d_Y[sampled_coordinate])/\
+                            (d_X[last_coordinate]-d_X[sampled_coordinate]))
                 d_Di.append(di)
             else:
                 d_V.append(d_cL[sampled_coordinate]/d_cT[sampled_coordinate])
-                di = np.arctan(np.inf if d_X[0] != d_X[sampled_coordinate] else
+                di = np.arctan(np.inf if d_X[0] == d_X[sampled_coordinate] else
                     (d_Y[0]-d_Y[sampled_coordinate])/\
                         (d_X[0]-d_X[sampled_coordinate]))
                 d_Di.append(di)
@@ -126,6 +128,8 @@ def preprocessing(d_X, d_Y, d_W, d_T, plot=False):
         plt.title('drawing data after discretizing')
         show_drawing_data(d_X, d_Y, d_V, d_sI, "Velocity")
         plt.title('drawing data velocity spectrum')
+        show_drawing_data(d_X, d_Y, d_Di, d_sI, "Direction")
+        plt.title('drawing data direction spectrum')
         plt.show()
     return d_X, d_Y, d_cT, d_cL, d_V, d_Di, d_sI
 
@@ -143,9 +147,10 @@ def get_steps_ahead_forecasting_data(d_X, d_Y, d_W, d_T):
             v, di = d_V[input_coord], d_Di[input_coord]
             forecast_coord = d_s[i+forecast_step]
             forecast_input.append([ct, cl, v, di, s])
+            diff_scale = d_cL[-1]/sampling_points
             x_diff = d_X[forecast_coord]-d_X[input_coord]
             y_diff = d_Y[forecast_coord]-d_Y[input_coord]
-            forecast_target.append([x_diff+1j*y_diff])
+            forecast_target.append([d_Di[forecast_coord]+1j*d_V[forecast_coord]])
     return np.array(forecast_input), np.array(forecast_target)
 
 def get_training_data():
@@ -229,7 +234,7 @@ while(True):
     
     print('# Training GomPlex')
     gp = GomPlex(npr.randint(int(np.log(X_train.shape[0]))*2)+8, True)
-    gp.fit(X_train, y_train, opt_rate=1, diff_tol=1e-5, cv_folds=1, plot=True)
+    gp.fit(X_train, y_train, opt_rate=1, cv_folds=cv_folds, plot=True)
     print('  Done.')
     
     print('# Choosing GomPlex Models')
