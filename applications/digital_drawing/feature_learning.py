@@ -26,7 +26,7 @@ test_proportion = 0.3
 in_centimeter = True
 metric = Metric('nmse')
 forecast_step = 1
-sampling_points = 100
+sampling_points = 50
 stroke_size_tol, stroke_length_tol = 10, 1
 time_faction, gender, age, edu_level = False, True, True, True
 if(in_centimeter):
