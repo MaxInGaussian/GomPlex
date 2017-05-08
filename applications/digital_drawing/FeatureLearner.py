@@ -14,6 +14,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from bisect import bisect_left
 
+from GomPlex import *
 
 class FeatureLearner(object):
     
@@ -33,6 +34,7 @@ class FeatureLearner(object):
         self.stroke_length_tol = stroke_length_tol
         self.metric = Metric(metric)
         self.plot_samples = plot_samples
+        self.model_path = "feature_learner_"
         if(self.in_centimeter):
             self.model_path += "cm_"+"s%d_f%d_"%(sampling_points, forecast_step)
         else:
@@ -47,6 +49,7 @@ class FeatureLearner(object):
     
     def load_drawing_data(self, csv_path):
         self.df_drawing_data = pd.read_csv(csv_path, index_col=0, header=0)
+        return self
     
     def train_inner_regressor(self, regression_method=None, ratio=0.3,
         cv_folds=3, plot_error=True):
@@ -60,7 +63,6 @@ class FeatureLearner(object):
             from sklearn.pipeline import Pipeline
         else:
             # Default Regression Method - GomPlex
-            from GomPlex import *
             print('# Preprocessing Raw Drawing Data')
             X_train, y_train, X_test, y_test = self.get_train_test_data(ratio)
             print('  Gathered %d Training Examples.'%(X_train.shape[0]))
@@ -87,18 +89,26 @@ class FeatureLearner(object):
     def get_train_test_data(self, ratio):
         X_train, y_train, X_test, y_test = None, None, None, None
         subjects_train, subjects_test = self.get_subjects_for_train_test(ratio)
-        for subject_id in subjects_for_training:
-            X_train_i, y_train_i = get_input_output_by_subject(subject_id)
+        for subject_id in subjects_train:
+            X_train_i, y_train_i = self.get_input_output_by_subject(subject_id)
             if(X_train_i is None and y_train_i is None):
                 continue
-            X_train = np.append(X_train, X_train_i[None, :], axis=0)
-            y_train = np.append(y_train, y_train_i[None, :], axis=0)
-        for subject_id in subjects_for_testing:
-            X_test_i, y_test_i = get_input_output_by_subject(subject_id)
+            if(X_train is None and y_train is None):
+                X_train = X_train_i.copy()
+                y_train = y_train_i.copy()
+                continue
+            X_train = np.append(X_train, X_train_i, axis=0)
+            y_train = np.append(y_train, y_train_i, axis=0)
+        for subject_id in subjects_test:
+            X_test_i, y_test_i = self.get_input_output_by_subject(subject_id)
             if(X_test_i is None and y_test_i is None):
                 continue
-            X_test = np.append(X_test, X_test_i[None, :], axis=0)
-            y_test = np.append(y_test, y_test_i[None, :], axis=0)
+            if(X_test is None and y_test is None):
+                X_test = X_test_i.copy()
+                y_test = y_test_i.copy()
+                continue
+            X_test = np.append(X_test, X_test_i, axis=0)
+            y_test = np.append(y_test, y_test_i, axis=0)
         return X_train, y_train, X_test, y_test
     
     def get_subjects_for_train_test(self, ratio):
@@ -121,28 +131,28 @@ class FeatureLearner(object):
     
     def get_input_output_by_subject(self, subject_id):
         decode = lambda str: np.array(list(map(float, str.split('|'))))
-        d_X = decode(drawing_raw_data_df['X'][subject_id])
-        d_Y = decode(drawing_raw_data_df['Y'][subject_id])
-        d_W = decode(drawing_raw_data_df['W'][subject_id])
-        d_T = decode(drawing_raw_data_df['T'][subject_id])
-        if(len(d_X) < sampling_points):
+        d_X = decode(self.df_drawing_data['X'][subject_id])
+        d_Y = decode(self.df_drawing_data['Y'][subject_id])
+        d_W = decode(self.df_drawing_data['W'][subject_id])
+        d_T = decode(self.df_drawing_data['T'][subject_id])
+        if(len(d_X) < self.sampling_points):
             return None, None
-        if(in_centimeter):
-            d_X /= CENTIMETER_TO_PIXELS
-            d_Y /= CENTIMETER_TO_PIXELS
-        input, output = get_behavioral_input_output_by_XYWT(d_X, d_Y, d_W, d_T)
-        ci = np.array(ci_data[subject_id])
+        if(self.in_centimeter):
+            d_X /= self.CENTIMETER_TO_PIXELS
+            d_Y /= self.CENTIMETER_TO_PIXELS
+        input, output = self.get_drawing_input_output_by_XYWT(d_X, d_Y, d_W, d_T)
+        ci = np.array(self.df_drawing_data['Cognitive Impairment'][subject_id])
         input = np.hstack((ci*np.ones((input.shape[0], 1)), input))
         if(self.use_age):
-            AGE = np.array(drawing_raw_data_df['Age'][subject_id])
-            input = np.hstack((input, AGE*np.ones((input.shape[0], 1))))
+            age = np.array(self.df_drawing_data['Age'][subject_id])
+            input = np.hstack((input, age*np.ones((input.shape[0], 1))))
         if(self.use_gender):
-            GENDER = np.array(drawing_raw_data_df['Male'][subject_id])
-            input = np.hstack((input, GENDER*np.ones((input.shape[0], 1))))
+            gender = np.array(self.df_drawing_data['Male'][subject_id])
+            input = np.hstack((input, gender*np.ones((input.shape[0], 1))))
         if(self.use_edu_level):
-            EDU_cols = ['Uneducated', 'Primary', 'Secondary', 'University']
-            EDU = np.array(drawing_raw_data_df[EDU_cols].loc[subject_id])
-            input = np.hstack((input, EDU*np.ones((input.shape[0], 1))))
+            edu_levels = ['Uneducated', 'Primary', 'Secondary', 'University']
+            edu_level = np.array(self.df_drawing_data[edu_levels].loc[subject_id])
+            input = np.hstack((input, edu_level*np.ones((input.shape[0], 1))))
         return input, output
         
     def show_drawing_data(self, d_X, d_Y, variable, d_SI=None, label="Time"):
@@ -158,7 +168,7 @@ class FeatureLearner(object):
         ax.set_ylabel('X')
         ax.set_zlabel('Y')
     
-    def get_behavioral_features_by_XYWT(self, d_X, d_Y, d_W, d_T):
+    def get_drawing_features_by_XYWT(self, d_X, d_Y, d_W, d_T):
         length = lambda sx, sy, ex, ey: np.sqrt((sx-ex)**2+(sy-ey)**2)
         coordinates, strokes, coordinate_to_stroke = [], [], {}
         d_L, d_V, d_DI = [], [], []
@@ -169,14 +179,14 @@ class FeatureLearner(object):
         for s in range(len(stop_points)+1):
             st = stop_points[s-1] if s > 0 else 0
             ed = stop_points[s] if s < len(stop_points) else len(d_X)-1
-            if(ed-st < stroke_size_tol):
+            if(ed-st < self.stroke_size_tol):
                 continue
             frag_lengths = []
             for i in range(st+1, ed):
                 frag_lengths.append(length(d_X[i], d_Y[i], d_X[i+1], d_Y[i+1]))
             stroke_length = np.sum(frag_lengths)
             if(len(strokes) > 0 and
-                stroke_length < min(stroke_length_tol, 0.5*strokes[-1])):
+                stroke_length < min(self.stroke_length_tol, 0.5*strokes[-1])):
                 continue
             d_L.extend(frag_lengths)
             for i in range(ed-st):
@@ -193,8 +203,8 @@ class FeatureLearner(object):
             self.show_drawing_data(d_X, d_Y, d_cT)
             plt.show()
         sampled_SI, d_SI = [], [[]for _ in range(len(strokes))]
-        for s in range(sampling_points-1):
-            d_cl = (s+1)*d_cL[-1]/sampling_points
+        for s in range(self.sampling_points-1):
+            d_cl = (s+1)*d_cL[-1]/self.sampling_points
             sampled_i = bisect_left(d_cL, d_cl)
             if(sampled_i not in sampled_SI):
                 stroke_order = coordinate_to_stroke[sampled_i]
@@ -225,19 +235,19 @@ class FeatureLearner(object):
             plt.show()
         return d_X, d_Y, d_V, d_DI, d_SI
     
-    def get_behavioral_input_output_by_XYWT(self, d_X, d_Y, d_W, d_T):
+    def get_drawing_input_output_by_XYWT(self, d_X, d_Y, d_W, d_T):
         d_X, d_Y, d_V, d_DI, d_SI =\
-            self.get_behavioral_features_by_XYWT(d_X, d_Y, d_W, d_T)
+            self.get_drawing_features_by_XYWT(d_X, d_Y, d_W, d_T)
         forecast_input, forecast_target = [], []
         for d_I in d_SI:
-            if(len(d_I) <= forecast_step):
+            if(len(d_I) <= self.forecast_step):
                 continue
-            for i in range(len(d_I)-forecast_step-1):
+            for i in range(len(d_I)-self.forecast_step-1):
                 input_coord = d_I[i+1]
                 v, di = d_V[input_coord], d_DI[input_coord]
                 v_diff = d_V[input_coord]-d_V[d_I[i]]
                 di_diff = d_DI[input_coord]-d_DI[d_I[i]]
-                forecast_coord = d_I[i+forecast_step+1]
+                forecast_coord = d_I[i+self.forecast_step+1]
                 forecast_input.append([v, di, v_diff, di_diff])
                 x_diff = d_X[forecast_coord]-d_X[input_coord]
                 y_diff = d_Y[forecast_coord]-d_Y[input_coord]

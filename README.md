@@ -67,7 +67,7 @@ To install GomPlex, clone this repo:
 ```python
 from GomPlex import *
 gp = GomPlex(sparsity=30)
-gp.fit(X, y, opt_rate=1, max_iter=500, iter_tol=50, nlml_tol=1e-4)
+gp.fit(X, y)
 predict_mean, predict_std = gp.predict(new_X)
 ```
 
