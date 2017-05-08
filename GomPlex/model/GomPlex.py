@@ -27,7 +27,7 @@ class GomPlex(object):
     
     def fit(self, X, y,
         cost_type='nlml', cv_folds=1, freqs_update_rate=0.2, opt_rate=1,
-        max_iter=500, iter_tol=50, diff_tol=1e-3, early_stop=10, plot=False):
+        max_iter=500, iter_tol=30, diff_tol=1e-3, early_stop=10, plot=False):
         self.freqs_update_rate = freqs_update_rate
         self.cost_type = cost_type
         self.cv_folds = cv_folds
@@ -118,7 +118,6 @@ class GomPlex(object):
         cv_metric = Metric(metric, self)
         cv_results = []
         data = np.hstack((self.X.copy(), self.y.copy()))
-        # npr.shuffle(data)
         if(n_folds > 1):
             fold_size = self.N//n_folds
             for i in range(n_folds):
@@ -154,7 +153,7 @@ class GomPlex(object):
         return np.concatenate([[g11, g12, g2], g3])
     
     def get_d_cost_d_noise(self):
-        # Warning: numerical gradient is used just for testing
+        # Warning: numerical gradient is used just for testing the idea
         self.noise_real += self.grad_epsilon
         self.train()
         cost_plus = self.get_cost()
@@ -167,7 +166,7 @@ class GomPlex(object):
             (cost_plus_j-self.last_cost)/(self.grad_epsilon*2)]
     
     def get_d_cost_d_kernel_scale(self):
-        # Warning: numerical gradient is used just for testing
+        # Warning: numerical gradient is used just for testing the idea
         self.kernel_scale += self.grad_epsilon
         self.train()
         cost_plus = self.get_cost()
@@ -175,7 +174,7 @@ class GomPlex(object):
         return (cost_plus-self.last_cost)/(self.grad_epsilon*2)
     
     def get_d_cost_d_freqs(self):
-        # Warning: numerical gradient is used just for testing
+        # Warning: numerical gradient is used just for testing the idea
         d_cost_d_freqs = np.zeros_like(self.spectral_freqs)
         update_freqs_num = int(self.M*self.freqs_update_rate)
         samples = npr.choice(range(self.M), update_freqs_num, replace=False)

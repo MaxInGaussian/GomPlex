@@ -30,13 +30,18 @@ class Metric(object):
         return getattr(self, self.metric)(target, mu_pred, std_pred)
 
     def mse(self, target, mu_pred, std_pred):        
-        mse = np.mean(np.absolute(target-mu_pred)**2)
-        return mse
+        mse_real = np.mean(np.real(target-mu_pred)**2)
+        mse_imag = np.mean(np.imag(target-mu_pred)**2)
+        return mse_real/2+mse_imag/2
 
     def nmse(self, target, mu_pred, std_pred):
-        mse = self.mse(target, mu_pred, std_pred)
-        nmse = mse/np.var(np.absolute(target))
-        return nmse
+        mse_real = np.mean(np.real(target-mu_pred)**2)
+        nmse_real = mse_real/np.var(np.real(target))
+        if(np.var(np.imag(target)) > 0):
+            mse_imag = np.mean(np.imag(target-mu_pred)**2)
+            nmse_imag = mse_imag/np.var(np.imag(target))
+            return nmse_real/2+nmse_imag/2
+        return nmse_real
 
     def mae(self, target, mu_pred, std_pred):
         mae = np.mean(np.absolute(target-mu_pred))

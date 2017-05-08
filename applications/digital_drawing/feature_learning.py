@@ -28,13 +28,11 @@ metric = Metric('nmse')
 forecast_step = 1
 sampling_points = 50
 stroke_size_tol, stroke_length_tol = 10, 1
-time_faction, gender, age, edu_level = False, True, True, True
+gender, age, edu_level = False, True, True
 if(in_centimeter):
-    MODEL_PATH += "cm_"+"s%d_"%(sampling_points)
+    MODEL_PATH += "cm_"+"s%d_f%d_"%(sampling_points, forecast_step)
 else:
-    MODEL_PATH += "px_"
-if(time_faction):
-    MODEL_PATH += "t"
+    MODEL_PATH += "px_"+"s%d_f%d_"%(sampling_points, forecast_step)
 if(gender):
     MODEL_PATH += "g"
 if(age):
@@ -57,8 +55,8 @@ def show_drawing_data(d_X, d_Y, spectrum, d_sI=None, label="Time"):
     ax.set_xlabel(label)
     ax.set_ylabel('X')
     ax.set_zlabel('Y')
-    ax.set_ylim([-1.6, 900/PIXEL_CENTIMETER] if in_centimeter else [-100, 900])
-    ax.set_zlim([-0.8, 450/PIXEL_CENTIMETER] if in_centimeter else [-50, 450])
+    # ax.set_ylim([-1.6, 900/PIXEL_CENTIMETER] if in_centimeter else [-100, 900])
+    # ax.set_zlim([-0.8, 450/PIXEL_CENTIMETER] if in_centimeter else [-50, 450])
 
 def preprocessing(d_X, d_Y, d_W, d_T, plot=False):
     coordinates, strokes, coordinate_to_stroke = [], [], {}
@@ -72,16 +70,18 @@ def preprocessing(d_X, d_Y, d_W, d_T, plot=False):
         ed = stop_points[s] if s < len(stop_points) else len(d_X)-1
         if(ed-st < stroke_size_tol):
             continue
-        stroke_lengths = []
+        fragments_lengths = []
         for i in range(st+1, ed):
-            stroke_lengths.append(length(d_X[i], d_Y[i], d_X[i+1], d_Y[i+1]))
-        if(np.sum(stroke_lengths) < stroke_length_tol):
+            fragments_lengths.append(length(d_X[i], d_Y[i], d_X[i+1], d_Y[i+1]))
+        stroke_length = np.sum(fragments_lengths)
+        if(len(strokes) > 0 and
+            stroke_length < min(stroke_length_tol, 0.5*strokes[-1])):
             continue
-        d_L.extend(stroke_lengths)
+        d_L.extend(fragments_lengths)
         for i in range(ed-st):
             coordinate_to_stroke[len(coordinates)+i] = len(strokes)
         coordinates.extend(list(range(st+1, ed)))
-        strokes.append(np.sum(stroke_lengths))
+        strokes.append(stroke_length)
     d_X = d_X[coordinates]
     d_Y = d_Y[coordinates]
     d_T = d_T[coordinates]
@@ -106,16 +106,15 @@ def preprocessing(d_X, d_Y, d_W, d_T, plot=False):
                 length_diff = d_cL[sampled_coordinate]-d_cL[last_coordinate]
                 time_diff = d_cT[sampled_coordinate]-d_cT[last_coordinate]
                 d_V.append(length_diff/time_diff)
-                di = np.arctan(np.inf
-                    if d_X[last_coordinate] == d_X[sampled_coordinate] else
-                        (d_Y[last_coordinate]-d_Y[sampled_coordinate])/\
-                            (d_X[last_coordinate]-d_X[sampled_coordinate]))
+                diff_vector = 1j*(d_Y[sampled_coordinate]-d_Y[last_coordinate])               
+                diff_vector += d_X[sampled_coordinate]-d_X[last_coordinate]
+                di = np.angle(diff_vector, deg=True)
                 d_Di.append(di)
             else:
                 d_V.append(d_cL[sampled_coordinate]/d_cT[sampled_coordinate])
-                di = np.arctan(np.inf if d_X[0] == d_X[sampled_coordinate] else
-                    (d_Y[0]-d_Y[sampled_coordinate])/\
-                        (d_X[0]-d_X[sampled_coordinate]))
+                diff_vector = 1j*(d_Y[sampled_coordinate]-d_Y[0])               
+                diff_vector += d_X[sampled_coordinate]-d_X[0]
+                di = np.angle(diff_vector, deg=True)
                 d_Di.append(di)
     d_X = d_X[sampled_coordinates]
     d_Y = d_Y[sampled_coordinates]
@@ -126,31 +125,27 @@ def preprocessing(d_X, d_Y, d_W, d_T, plot=False):
     if(plot):
         show_drawing_data(d_X, d_Y, d_cT)
         plt.title('drawing data after discretizing')
-        show_drawing_data(d_X, d_Y, d_V, d_sI, "Velocity")
-        plt.title('drawing data velocity spectrum')
-        show_drawing_data(d_X, d_Y, d_Di, d_sI, "Direction")
-        plt.title('drawing data direction spectrum')
+        show_drawing_data(d_V, d_Di, d_cT)
+        plt.title('drawing data velocity polar coordinate')
         plt.show()
-    return d_X, d_Y, d_cT, d_cL, d_V, d_Di, d_sI
+    return d_X, d_Y, d_V, d_Di, d_sI
 
 def get_steps_ahead_forecasting_data(d_X, d_Y, d_W, d_T):
-    d_X, d_Y, d_cT, d_cL, d_V, d_Di, d_sI = preprocessing(d_X, d_Y, d_W, d_T)
-    if(time_faction):
-        d_cT = Scaler('minmax', d_cT).eval(d_cT)
+    d_X, d_Y, d_V, d_Di, d_sI = preprocessing(d_X, d_Y, d_W, d_T)
     forecast_input, forecast_target = [], []
     for s, d_s in enumerate(d_sI):
         if(len(d_s) <= forecast_step):
             continue
-        for i in range(len(d_s)-forecast_step):
-            input_coord = d_s[i]
-            ct, cl = d_cT[input_coord], d_cL[input_coord]
+        for i in range(len(d_s)-forecast_step-1):
+            input_coord = d_s[i+1]
             v, di = d_V[input_coord], d_Di[input_coord]
-            forecast_coord = d_s[i+forecast_step]
-            forecast_input.append([ct, cl, v, di, s])
-            diff_scale = d_cL[-1]/sampling_points
+            v_diff = d_V[input_coord]-d_V[d_s[i]]
+            di_diff = d_Di[input_coord]-d_Di[d_s[i]]
+            forecast_coord = d_s[i+forecast_step+1]
+            forecast_input.append([v, di, v_diff, di_diff])
             x_diff = d_X[forecast_coord]-d_X[input_coord]
             y_diff = d_Y[forecast_coord]-d_Y[input_coord]
-            forecast_target.append([d_Di[forecast_coord]+1j*d_V[forecast_coord]])
+            forecast_target.append([x_diff+1j*y_diff])
     return np.array(forecast_input), np.array(forecast_target)
 
 def get_training_data():
@@ -168,7 +163,7 @@ def get_training_data():
     test_nonci = int(num_nonci*test_proportion)
     rand_nonci = npr.choice(list(range(num_nonci)), test_nonci, replace=False)
     rand_nonci = nonci_subjects[rand_nonci]
-    rand_nonci_train = list(set(ci_subjects).difference(rand_ci))
+    rand_nonci_train = list(set(nonci_subjects).difference(rand_nonci))
     subjects_for_testing = rand_ci.tolist()+rand_nonci.tolist()
     subjects_for_training = rand_ci_train+rand_nonci_train
     for subject_id in subjects_for_training:
