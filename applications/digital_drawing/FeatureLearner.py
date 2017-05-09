@@ -21,12 +21,12 @@ class FeatureLearner(object):
     df_drawing_data = None
     CENTIMETER_TO_PIXELS = 62.992126
     
-    def __init__(self, in_centimeter=True, sampling_points=50, forecast_step=1,
-        use_gender=False, use_age=True, use_edu_level=True, metric='nmse',
+    def __init__(self, moca_cutoff=20, in_centimeter=True, seperate_length=0.2,
+        use_gender=True, use_age=True, use_edu_level=True, metric='nmse',
         stroke_size_tol=10, stroke_length_tol=1, plot_samples=False):
+        self.moca_cutoff = moca_cutoff
         self.in_centimeter = in_centimeter
-        self.sampling_points = sampling_points
-        self.forecast_step = forecast_step
+        self.seperate_length = seperate_length
         self.use_gender = use_gender
         self.use_age = use_age
         self.use_edu_level = use_edu_level
@@ -34,34 +34,56 @@ class FeatureLearner(object):
         self.stroke_length_tol = stroke_length_tol
         self.metric = Metric(metric)
         self.plot_samples = plot_samples
-        self.model_path = "feature_learner_"
-        if(self.in_centimeter):
-            self.model_path += "cm_"+"s%d_f%d_"%(sampling_points, forecast_step)
-        else:
-            self.model_path += "px_"+"s%d_f%d_"%(sampling_points, forecast_step)
-        if(self.use_gender):
-            self.model_path += "g"
-        if(self.use_age):
-            self.model_path += "a"
-        if(self.use_edu_level):
-            self.model_path += "e"
-        self.model_path += ".pkl"
     
     def load_drawing_data(self, csv_path):
         self.df_drawing_data = pd.read_csv(csv_path, index_col=0, header=0)
         return self
     
-    def train_inner_regressor(self, regression_method=None, ratio=0.3,
-        cv_folds=3, plot_error=True):
-        if(regression_method == "MLP"):
-            from keras.models import Sequential
-            from keras.layers import Dense
-            from keras.wrappers.scikit_learn import KerasRegressor
-            from sklearn.model_selection import cross_val_score
-            from sklearn.model_selection import KFold
-            from sklearn.preprocessing import StandardScaler
-            from sklearn.pipeline import Pipeline
+    def get_regressor_path(self, regress_meth='GomPlex'):
+        model_path = regress_meth+"_"
+        if(self.in_centimeter):
+            model_path += "cm_"+"s%.1f_"%(self.seperate_length)
         else:
+            model_path += "px_"+"s%.1f_"%(self.seperate_length)
+        if(self.use_gender):
+            model_path += "g"
+        if(self.use_age):
+            model_path += "a"
+        if(self.use_edu_level):
+            model_path += "e"
+        return model_path+".pkl"
+    
+    def load_regression(regress_meth='GomPlex'):
+        model_path = self.get_regressor_path(regress_meth)
+        if(regress_meth == 'GomPlex'):
+            complex_regressor = GomPlex().load(model_path)
+        return complex_regressor
+    
+    def learn_features_for_subjects(self, regress_meth='GomPlex'):
+        subjects = self.df_drawing_data.index
+        X_feat = {}
+        for subject in subjects:
+            X_feat[subject] =\
+                self.learn_features_for_one_subject(subject, regress_meth)
+        return X_feat
+    
+    def learn_features_for_one_subject(self, subject, regress_meth='GomPlex'):
+        complex_regressor = self.load_regression(regress_meth)
+        subjects = self.df_drawing_data.index
+        subjects = list(set(subjects).difference([subject]))
+        X_train, y_train = self.get_input_output_matrix_by_subjects(subjects)
+        complex_regressor.fit(X_train, y_train)
+        X_subject = self.get_input_output_matrix_by_one_subject(subject)[0]
+        if(X_subject is None):
+            return None
+        X_subject_ci, X_subject_nonci = X_subject.copy(), X_subject.copy()
+        y_predict_ci = complex_regressor.predict(X_subject_ci)[0]
+        y_predict_nonci = complex_regressor.predict(X_subject_nonci)[0]
+        return y_predict_ci.ravel()-y_predict_nonci.ravel()
+    
+    def train_regressor(self, regress_meth='GomPlex', ratio=0.3,
+        cv_folds=3, plot_error=True):
+        if(regress_meth == 'GomPlex'):
             # Default Regression Method - GomPlex
             print('# Preprocessing Raw Drawing Data')
             X_train, y_train, X_test, y_test = self.get_train_test_data(ratio)
@@ -73,53 +95,43 @@ class FeatureLearner(object):
             gp.fit(X_train, y_train, cv_folds=cv_folds, plot=plot_error)
             print('  Done.')
             print('# Choosing GomPlex Models')
-            gp_score = metric.eval(y_test, *gp.predict(X_test))
-            print(' new model     - %s %.6f'%(metric.metric, gp_score))
-            if(not os.path.exists(self.model_path)):
-                gp.save(self.model_path)
+            new_score = self.metric.eval(y_test, *gp.predict(X_test))
+            print('  new score - %s=%.6f'%(self.metric.metric, new_score))
+            model_path = self.get_regressor_path(regress_meth)
+            if(not os.path.exists(model_path)):
+                gp.save(model_path)
             else:
-                best_gp = GomPlex().load(self.model_path).fit(X_train, y_train)
-                best_gp_score = metric.eval(y_test, *best_gp.predict(X_test))
-                print(' original best - %s %.6f'%(metric.metric, best_gp_score))
-                if(gp_score < best_gp_score):
-                    gp.save(self.model_path)
+                best_gp = GomPlex().load(model_path).fit(X_train, y_train)
+                ori_score = self.metric.eval(y_test, *best_gp.predict(X_test))
+                print('  ori score - %s=%.6f'%(self.metric.metric, ori_score))
+                if(new_score < ori_score):
+                    gp.save(model_path)
                     print('  Found Better Model!')
             print('  Done.')
+        elif(regress_meth == "MLP"):
+            from keras.models import Sequential
+            from keras.layers import Dense
+            from keras.wrappers.scikit_learn import KerasRegressor
+            from sklearn.model_selection import cross_val_score
+            from sklearn.model_selection import KFold
+            from sklearn.preprocessing import StandardScaler
+            from sklearn.pipeline import Pipeline
     
     def get_train_test_data(self, ratio):
-        X_train, y_train, X_test, y_test = None, None, None, None
         subjects_train, subjects_test = self.get_subjects_for_train_test(ratio)
-        for subject_id in subjects_train:
-            X_train_i, y_train_i = self.get_input_output_by_subject(subject_id)
-            if(X_train_i is None and y_train_i is None):
-                continue
-            if(X_train is None and y_train is None):
-                X_train = X_train_i.copy()
-                y_train = y_train_i.copy()
-                continue
-            X_train = np.append(X_train, X_train_i, axis=0)
-            y_train = np.append(y_train, y_train_i, axis=0)
-        for subject_id in subjects_test:
-            X_test_i, y_test_i = self.get_input_output_by_subject(subject_id)
-            if(X_test_i is None and y_test_i is None):
-                continue
-            if(X_test is None and y_test is None):
-                X_test = X_test_i.copy()
-                y_test = y_test_i.copy()
-                continue
-            X_test = np.append(X_test, X_test_i, axis=0)
-            y_test = np.append(y_test, y_test_i, axis=0)
+        X_train, y_train = self.get_input_output_matrix_by_subjects(subjects_train)
+        X_test, y_test = self.get_input_output_matrix_by_subjects(subjects_test)
         return X_train, y_train, X_test, y_test
     
     def get_subjects_for_train_test(self, ratio):
-        ci_data = self.df_drawing_data['Cognitive Impairment']
-        ci_subjects = self.df_drawing_data[ci_data==1].index
+        moca_data = self.df_drawing_data['MoCA Total']
+        ci_subjects = self.df_drawing_data[moca_data<self.moca_cutoff].index
         num_ci = len(ci_subjects)
         test_ci = int(num_ci*ratio)
         rand_ci = npr.choice(range(num_ci), test_ci, replace=False)
         rand_ci = ci_subjects[rand_ci]
         rand_ci_train = list(set(ci_subjects).difference(rand_ci))
-        nonci_subjects = self.df_drawing_data[ci_data==0].index
+        nonci_subjects = self.df_drawing_data[moca_data>=self.moca_cutoff].index
         num_nonci = len(nonci_subjects)
         test_nonci = int(num_nonci*ratio)
         rand_nonci = npr.choice(range(num_nonci), test_nonci, replace=False)
@@ -129,29 +141,42 @@ class FeatureLearner(object):
         subjects_test = rand_ci.tolist()+rand_nonci.tolist()
         return subjects_train, subjects_test
     
-    def get_input_output_by_subject(self, subject_id):
+    def get_input_output_matrix_by_subjects(self, subjects):
+        input_mat, output_mat = None, None
+        for subject in subjects:
+            input, output = self.get_input_output_matrix_by_one_subject(subject)
+            if(input is None and output is None):
+                continue
+            if(input_mat is None and output_mat is None):
+                input_mat = input.copy()
+                output_mat = output.copy()
+                continue
+            input_mat = np.append(input_mat, input, axis=0)
+            output_mat = np.append(output_mat, output, axis=0)
+        return input_mat, output_mat
+    
+    def get_input_output_matrix_by_one_subject(self, subject):
         decode = lambda str: np.array(list(map(float, str.split('|'))))
-        d_X = decode(self.df_drawing_data['X'][subject_id])
-        d_Y = decode(self.df_drawing_data['Y'][subject_id])
-        d_W = decode(self.df_drawing_data['W'][subject_id])
-        d_T = decode(self.df_drawing_data['T'][subject_id])
-        if(len(d_X) < self.sampling_points):
-            return None, None
+        d_X = decode(self.df_drawing_data['X'][subject])
+        d_Y = decode(self.df_drawing_data['Y'][subject])
+        d_W = decode(self.df_drawing_data['W'][subject])
+        d_T = decode(self.df_drawing_data['T'][subject])/1000
         if(self.in_centimeter):
             d_X /= self.CENTIMETER_TO_PIXELS
             d_Y /= self.CENTIMETER_TO_PIXELS
         input, output = self.get_drawing_input_output_by_XYWT(d_X, d_Y, d_W, d_T)
-        ci = np.array(self.df_drawing_data['Cognitive Impairment'][subject_id])
+        moca_ci = self.df_drawing_data['MoCA Total'] < self.moca_cutoff
+        ci = moca_ci.loc[subject]
         input = np.hstack((ci*np.ones((input.shape[0], 1)), input))
         if(self.use_age):
-            age = np.array(self.df_drawing_data['Age'][subject_id])
+            age = np.array(self.df_drawing_data['Age'][subject])
             input = np.hstack((input, age*np.ones((input.shape[0], 1))))
         if(self.use_gender):
-            gender = np.array(self.df_drawing_data['Male'][subject_id])
+            gender = np.array(self.df_drawing_data['Male'][subject])
             input = np.hstack((input, gender*np.ones((input.shape[0], 1))))
         if(self.use_edu_level):
             edu_levels = ['Uneducated', 'Primary', 'Secondary', 'University']
-            edu_level = np.array(self.df_drawing_data[edu_levels].loc[subject_id])
+            edu_level = np.array(self.df_drawing_data[edu_levels].loc[subject])
             input = np.hstack((input, edu_level*np.ones((input.shape[0], 1))))
         return input, output
         
@@ -202,9 +227,10 @@ class FeatureLearner(object):
         if(len(d_cL) == 0):
             self.show_drawing_data(d_X, d_Y, d_cT)
             plt.show()
+        sample_points = int(d_cL[-1]/self.seperate_length)
         sampled_SI, d_SI = [], [[]for _ in range(len(strokes))]
-        for s in range(self.sampling_points-1):
-            d_cl = (s+1)*d_cL[-1]/self.sampling_points
+        for s in range(sample_points-1):
+            d_cl = (s+1)*d_cL[-1]/sample_points
             sampled_i = bisect_left(d_cL, d_cl)
             if(sampled_i not in sampled_SI):
                 stroke_order = coordinate_to_stroke[sampled_i]
@@ -217,14 +243,12 @@ class FeatureLearner(object):
                     d_V.append(length_diff/time_diff)
                     diff_vector = 1j*(d_Y[sampled_i]-d_Y[last_i])               
                     diff_vector += d_X[sampled_i]-d_X[last_i]
-                    di = np.angle(diff_vector, deg=True)
-                    d_DI.append(di)
+                    d_DI.append(np.angle(diff_vector, deg=True))
                 else:
                     d_V.append(d_cL[sampled_i]/d_cT[sampled_i])
                     diff_vector = 1j*(d_Y[sampled_i]-d_Y[0])               
                     diff_vector += d_X[sampled_i]-d_X[0]
-                    di = np.angle(diff_vector, deg=True)
-                    d_DI.append(di)
+                    d_DI.append(np.angle(diff_vector, deg=True))
         d_X, d_Y, d_cT = d_X[sampled_SI], d_Y[sampled_SI], d_cT[sampled_SI]
         d_V, d_DI = np.array(d_V), np.array(d_DI)
         if(self.plot_samples):
@@ -233,25 +257,21 @@ class FeatureLearner(object):
             self.show_drawing_data(d_V, d_DI, d_cT)
             plt.title('drawing data velocity polar coordinate')
             plt.show()
-        return d_X, d_Y, d_V, d_DI, d_SI
+        return d_X, d_Y, d_cT, d_V, d_DI, d_SI
     
     def get_drawing_input_output_by_XYWT(self, d_X, d_Y, d_W, d_T):
-        d_X, d_Y, d_V, d_DI, d_SI =\
+        d_X, d_Y, d_cT, d_V, d_DI, d_SI =\
             self.get_drawing_features_by_XYWT(d_X, d_Y, d_W, d_T)
         forecast_input, forecast_target = [], []
         for d_I in d_SI:
-            if(len(d_I) <= self.forecast_step):
-                continue
-            for i in range(len(d_I)-self.forecast_step-1):
-                input_coord = d_I[i+1]
-                v, di = d_V[input_coord], d_DI[input_coord]
-                v_diff = d_V[input_coord]-d_V[d_I[i]]
-                di_diff = d_DI[input_coord]-d_DI[d_I[i]]
-                forecast_coord = d_I[i+self.forecast_step+1]
-                forecast_input.append([v, di, v_diff, di_diff])
-                x_diff = d_X[forecast_coord]-d_X[input_coord]
-                y_diff = d_Y[forecast_coord]-d_Y[input_coord]
-                forecast_target.append([x_diff+1j*y_diff])
+            for i in range(len(d_I)-1):
+                input_coord = d_I[i]
+                v_k, di_k = d_V[input_coord], d_DI[input_coord]
+                x_k, y_k = d_X[input_coord], d_Y[input_coord]
+                forecast_input.append([x_k, y_k, v_k, di_k])
+                forecast_coord = d_I[i+1]
+                x_f, y_f = d_X[forecast_coord], d_Y[forecast_coord]
+                forecast_target.append([x_f+1j*y_f])
         return np.array(forecast_input), np.array(forecast_target)
     
     
