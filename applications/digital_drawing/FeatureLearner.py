@@ -21,30 +21,30 @@ class FeatureLearner(object):
     df_drawing_data = None
     CENTIMETER_TO_PIXELS = 62.992126
     
-    def __init__(self, moca_cutoff=20, in_centimeter=True, seperate_length=0.2,
-        use_gender=True, use_age=True, use_edu_level=True, metric='nmse',
-        stroke_size_tol=10, stroke_length_tol=1, plot_samples=False):
+    def __init__(self, moca_cutoff=20, forecast_step=0.05, sample_time=100,
+        use_past=3, use_gender=True, use_age=True, use_edu_level=True,
+        stroke_size_tol=10, stroke_length_tol=1, centimeter=True, metric='nmse',
+        show_training_drawings=False, show_predicted_drawings=False):
         self.moca_cutoff = moca_cutoff
-        self.in_centimeter = in_centimeter
-        self.seperate_length = seperate_length
+        self.centimeter = centimeter
+        self.sample_time = sample_time
         self.use_gender = use_gender
         self.use_age = use_age
         self.use_edu_level = use_edu_level
         self.stroke_size_tol = stroke_size_tol
         self.stroke_length_tol = stroke_length_tol
+        self.use_past = use_past
+        self.forecast_step = forecast_step
         self.metric = Metric(metric)
-        self.plot_samples = plot_samples
+        self.show_training_drawings = show_training_drawings
+        self.show_predicted_drawings = show_predicted_drawings
     
     def load_drawing_data(self, csv_path):
         self.df_drawing_data = pd.read_csv(csv_path, index_col=0, header=0)
         return self
     
-    def get_regressor_path(self, regress_meth='GomPlex'):
-        model_path = regress_meth+"_"
-        if(self.in_centimeter):
-            model_path += "cm_"+"s%.1f_"%(self.seperate_length)
-        else:
-            model_path += "px_"+"s%.1f_"%(self.seperate_length)
+    def get_regressor_path(self, reg_meth='GomPlex'):
+        model_path = reg_meth+"_f%.3f_p%d"%(self.forecast_step, self.use_past)
         if(self.use_gender):
             model_path += "g"
         if(self.use_age):
@@ -53,37 +53,65 @@ class FeatureLearner(object):
             model_path += "e"
         return model_path+".pkl"
     
-    def load_regression(regress_meth='GomPlex'):
-        model_path = self.get_regressor_path(regress_meth)
-        if(regress_meth == 'GomPlex'):
+    def load_regression(self, reg_meth='GomPlex'):
+        model_path = self.get_regressor_path(reg_meth)
+        if(reg_meth == 'GomPlex'):
             complex_regressor = GomPlex().load(model_path)
         return complex_regressor
     
-    def learn_features_for_subjects(self, regress_meth='GomPlex'):
+    def eval_features_for_subjects(self, reg_meth='GomPlex'):
         subjects = self.df_drawing_data.index
-        X_feat = {}
+        X_feat = []
+        accuracy, count_correct, count_case = 0, 0, 0
         for subject in subjects:
-            X_feat[subject] =\
-                self.learn_features_for_one_subject(subject, regress_meth)
-        return X_feat
+            ci, ci_prob = self.learn_features_for_subject(subject, reg_meth)
+            feat_mu, feat_std = np.mean(ci_prob), np.std(ci_prob)
+            feats = [feat_mu, feat_std]
+            count_case += 1
+            if(int(feat_mu > 0.5) == ci):
+                count_correct += 1
+            accuracy = count_correct/count_case
+            print('  accuracy = %.4f'%(accuracy))
+            X_feat.append(feats)
+        return accuracy, np.array(X_feat)
     
-    def learn_features_for_one_subject(self, subject, regress_meth='GomPlex'):
-        complex_regressor = self.load_regression(regress_meth)
+    def learn_features_for_subject(self, subject, reg_meth='GomPlex'):
+        complex_regressor = self.load_regression(reg_meth)
         subjects = self.df_drawing_data.index
         subjects = list(set(subjects).difference([subject]))
         X_train, y_train = self.get_input_output_matrix_by_subjects(subjects)
         complex_regressor.fit(X_train, y_train)
-        X_subject = self.get_input_output_matrix_by_one_subject(subject)[0]
-        if(X_subject is None):
-            return None
-        X_subject_ci, X_subject_nonci = X_subject.copy(), X_subject.copy()
-        y_predict_ci = complex_regressor.predict(X_subject_ci)[0]
-        y_predict_nonci = complex_regressor.predict(X_subject_nonci)[0]
-        return y_predict_ci.ravel()-y_predict_nonci.ravel()
+        X, y = self.get_input_output_matrix_by_subject(subject)
+        X_ci, X_nonci = X.copy(), X.copy()
+        X_ci[:, 0], X_nonci[:, 0] = 1, 0
+        y_ci = complex_regressor.predict(X_ci)[0]
+        y_nonci = complex_regressor.predict(X_nonci)[0]
+        if(self.show_predicted_drawings):
+            self.show_predicted_drawing(X, y, y_ci, y_nonci)
+            plt.show()
+        y_ci_sim = 1/np.absolute(y_ci.ravel()-y.ravel())
+        y_nonci_sim = 1/np.absolute(y_nonci.ravel()-y.ravel())
+        ci_prob = np.exp(-y_ci_sim)/(np.exp(-y_ci_sim)+np.exp(-y_nonci_sim))
+        return X[0, 0], ci_prob
     
-    def train_regressor(self, regress_meth='GomPlex', ratio=0.3,
-        cv_folds=3, plot_error=True):
-        if(regress_meth == 'GomPlex'):
+    def show_predicted_drawing(self, X, y, y_ci, y_nonci):
+        fig = plt.figure()
+        ax = fig.gca()
+        ax.scatter(y.real, y.imag, color='black', marker='o', s=20,
+            label="true drawing path (%d)"%(int(X[0, 0])))
+        ax.scatter(y_ci.real, y_ci.imag, color='red', marker='o', s=20,
+            label="CI predicted path")
+        ax.scatter(y_nonci.real, y_nonci.imag, color='green', marker='o', s=20,
+            label="non-CI predicted path")
+        ax.legend()
+        ax.set_xlabel('X')
+        ax.set_ylabel('Y')
+        ax.set_xlim([-1, 15])
+        ax.set_ylim([-1, 9])
+    
+    def train_regressor(self, reg_meth='GomPlex', ratio=0.3,
+        cv_folds=3, plot_error=False):
+        if(reg_meth == 'GomPlex'):
             # Default Regression Method - GomPlex
             print('# Preprocessing Raw Drawing Data')
             X_train, y_train, X_test, y_test = self.get_train_test_data(ratio)
@@ -97,7 +125,7 @@ class FeatureLearner(object):
             print('# Choosing GomPlex Models')
             new_score = self.metric.eval(y_test, *gp.predict(X_test))
             print('  new score - %s=%.6f'%(self.metric.metric, new_score))
-            model_path = self.get_regressor_path(regress_meth)
+            model_path = self.get_regressor_path(reg_meth)
             if(not os.path.exists(model_path)):
                 gp.save(model_path)
             else:
@@ -108,7 +136,7 @@ class FeatureLearner(object):
                     gp.save(model_path)
                     print('  Found Better Model!')
             print('  Done.')
-        elif(regress_meth == "MLP"):
+        elif(reg_meth == "MLP"):
             from keras.models import Sequential
             from keras.layers import Dense
             from keras.wrappers.scikit_learn import KerasRegressor
@@ -144,7 +172,7 @@ class FeatureLearner(object):
     def get_input_output_matrix_by_subjects(self, subjects):
         input_mat, output_mat = None, None
         for subject in subjects:
-            input, output = self.get_input_output_matrix_by_one_subject(subject)
+            input, output = self.get_input_output_matrix_by_subject(subject)
             if(input is None and output is None):
                 continue
             if(input_mat is None and output_mat is None):
@@ -155,16 +183,17 @@ class FeatureLearner(object):
             output_mat = np.append(output_mat, output, axis=0)
         return input_mat, output_mat
     
-    def get_input_output_matrix_by_one_subject(self, subject):
+    def get_input_output_matrix_by_subject(self, subject):
         decode = lambda str: np.array(list(map(float, str.split('|'))))
         d_X = decode(self.df_drawing_data['X'][subject])
         d_Y = decode(self.df_drawing_data['Y'][subject])
         d_W = decode(self.df_drawing_data['W'][subject])
+        d_W[-1] = 0
         d_T = decode(self.df_drawing_data['T'][subject])/1000
-        if(self.in_centimeter):
-            d_X /= self.CENTIMETER_TO_PIXELS
-            d_Y /= self.CENTIMETER_TO_PIXELS
-        input, output = self.get_drawing_input_output_by_XYWT(d_X, d_Y, d_W, d_T)
+        drawing = np.vstack([d_X, d_Y, d_W, d_T]).T
+        if(self.centimeter):
+            drawing[:, :2] /= self.CENTIMETER_TO_PIXELS
+        input, output = self.get_drawing_input_output_by_XYWT(drawing)
         moca_ci = self.df_drawing_data['MoCA Total'] < self.moca_cutoff
         ci = moca_ci.loc[subject]
         input = np.hstack((ci*np.ones((input.shape[0], 1)), input))
@@ -179,100 +208,117 @@ class FeatureLearner(object):
             edu_level = np.array(self.df_drawing_data[edu_levels].loc[subject])
             input = np.hstack((input, edu_level*np.ones((input.shape[0], 1))))
         return input, output
+    
+    def get_drawing_input_output_by_XYWT(self, drawing):
+        drawing, d_cL, d_V, d_DI = self.get_drawing_features_by_XYWT(drawing)
+        d_X, d_Y, d_W, d_T = drawing.T.tolist()
+        d_cT = np.cumsum(d_T)
+        rand_bound = d_cT[-1]*(1-self.forecast_step)
+        rand_bound_max = bisect_left(d_cT, rand_bound)
+        rand_bound = d_cT[-1]*self.use_past*self.forecast_step
+        rand_bound_min = bisect_left(d_cT, rand_bound)
+        if(rand_bound_min>=rand_bound_max):
+            print(d_cT)
+        rand_range = range(rand_bound_min, rand_bound_max)
+        rand_I = npr.choice(rand_range, self.sample_time)
+        input, target = [], []
+        for rand_i in rand_I:
+            d_ci = rand_i
+            x, y, v, di = d_X[d_ci], d_Y[d_ci], d_V[d_ci], d_DI[d_ci]
+            lp, tp = d_cL[d_ci]/d_cL[-1], d_cT[d_ci]/d_cT[-1]
+            cur_info = [lp, tp, x, y, v, di]
+            I = [d_ci]
+            for d_p in range(self.use_past):
+                d_ptp = tp-(d_p+1)*self.forecast_step
+                d_pi = bisect_left(d_cT, d_cT[-1]*d_ptp)-1
+                I.append(d_pi)
+                x, y = x-d_X[d_pi], y-d_Y[d_pi]
+                v, di = v-d_V[d_pi], di-d_DI[d_pi]
+                cur_info.extend([v, di])
+            if(np.any(np.isnan(cur_info))):
+                print(cur_info)
+            d_ftp = tp+self.forecast_step
+            d_fi = bisect_left(d_cT, d_cT[-1]*d_ftp)
+            I.append(d_fi)
+            if(min(I) < 0):
+                continue
+            if(self.show_training_drawings):
+                print(I)
+            input.append(cur_info)
+            target.append([d_X[d_fi]+1j*d_Y[d_fi]])
+        return np.array(input), np.array(target)
+    
+    def get_drawing_features_by_XYWT(self, drawing):
+        d_X, d_Y, d_W, d_T = drawing.T.tolist()
+        for d_i, d_t in enumerate(d_T):
+            if(d_W[d_i] == 0 and d_t > np.median(d_T)*1e3):
+                drawing[d_i, 3] = np.median(d_T)*1e3
+        length = lambda sx, sy, ex, ey: np.sqrt((sx-ex)**2+(sy-ey)**2)
+        if(self.show_training_drawings):
+            self.show_drawing_data(drawing)
+            plt.title('original drawing data')
+        d_I, strokes = [], []
+        d_L, d_V, d_DI, d_ST = [], [], [], []
+        stop_points = np.sort(np.where(drawing[:, 2]==1)[0])
+        for s in range(len(stop_points)+1):
+            # stroke -> st to ed (inclusive)
+            st = stop_points[s-1]+1 if s > 0 else 0
+            ed = stop_points[s] if s < len(stop_points) else drawing.shape[0]-1
+            stroke_size = ed-st+1
+            if(stroke_size < self.stroke_size_tol):
+                continue
+            stroke_frag_lengths = [0]
+            immediate_velocities = [0]
+            immediate_direcions = [0]
+            for d_i in range(st+1, ed+1):
+                frag_length = length(d_X[d_i], d_Y[d_i], d_X[d_i-1], d_Y[d_i-1])
+                stroke_frag_lengths.append(frag_length)
+                immediate_velocities.append(frag_length/d_T[d_i-1])
+                frag_direction = d_X[d_i]-d_X[d_i-1]+1j*(d_Y[d_i]-d_Y[d_i-1])               
+                frag_direction = np.angle(frag_direction, deg=True)
+                immediate_direcions.append(frag_direction)
+            stroke_length = np.sum(stroke_frag_lengths)
+            if(len(strokes) > 0 and
+                stroke_length < min(self.stroke_length_tol, min(strokes)/2)):
+                continue
+            d_L.extend(stroke_frag_lengths)
+            d_V.extend(immediate_velocities)
+            d_DI.extend(immediate_direcions)
+            d_ST.append(len(d_I))
+            d_I.extend(list(range(st, ed+1)))
+            strokes.append(stroke_length)
+        drawing = drawing[d_I]
+        d_cL, d_V, d_DI = np.cumsum(d_L), np.array(d_V), np.array(d_DI)
+        if(self.show_training_drawings):
+            self.show_drawing_data(drawing)
+            plt.title('drawing data after cleansing')
+            self.show_drawing_data(drawing, d_cL, 'Length')
+            self.show_drawing_data(drawing, d_V, 'Velocity')
+            self.show_drawing_data(drawing, d_DI, 'Direction')
+            plt.show()
+        return drawing, d_cL, d_V, d_DI
         
-    def show_drawing_data(self, d_X, d_Y, variable, d_SI=None, label="Time"):
+    def show_drawing_data(self, drawing, variable=None, label="Time"):
         fig = plt.figure()
         ax = fig.gca(projection='3d')
-        if(d_SI is None):
-            ax.scatter(variable, d_X, d_Y, marker='o', s=30)
-        else:
-            for d_I in d_SI:
-                ax.plot(variable[d_I], d_X[d_I], d_Y[d_I], 'r-')
-        ax.legend()
-        ax.set_xlabel(label)
-        ax.set_ylabel('X')
-        ax.set_zlabel('Y')
-    
-    def get_drawing_features_by_XYWT(self, d_X, d_Y, d_W, d_T):
-        length = lambda sx, sy, ex, ey: np.sqrt((sx-ex)**2+(sy-ey)**2)
-        coordinates, strokes, coordinate_to_stroke = [], [], {}
-        d_L, d_V, d_DI = [], [], []
-        stop_points = np.where(d_W==1)[0]
-        if(self.plot_samples):
-            self.show_drawing_data(d_X, d_Y, np.cumsum(d_T))
-            plt.title('raw drawing data')
+        if(variable is None):
+            variable = np.cumsum(drawing[:, 3])
+        stop_points = np.sort(np.where(drawing[:, 2]==1)[0])
         for s in range(len(stop_points)+1):
-            st = stop_points[s-1] if s > 0 else 0
-            ed = stop_points[s] if s < len(stop_points) else len(d_X)-1
-            if(ed-st < self.stroke_size_tol):
-                continue
-            frag_lengths = []
-            for i in range(st+1, ed):
-                frag_lengths.append(length(d_X[i], d_Y[i], d_X[i+1], d_Y[i+1]))
-            stroke_length = np.sum(frag_lengths)
-            if(len(strokes) > 0 and
-                stroke_length < min(self.stroke_length_tol, 0.5*strokes[-1])):
-                continue
-            d_L.extend(frag_lengths)
-            for i in range(ed-st):
-                coordinate_to_stroke[len(coordinates)+i] = len(strokes)
-            coordinates.extend(list(range(st+1, ed)))
-            strokes.append(stroke_length)
-        d_X, d_Y, d_T = d_X[coordinates], d_Y[coordinates], d_T[coordinates]
-        d_cT = np.cumsum(d_T)
-        if(self.plot_samples):
-            self.show_drawing_data(d_X, d_Y, d_cT)
-            plt.title('drawing data after cleansing')
-        d_cL = np.cumsum(d_L)
-        if(len(d_cL) == 0):
-            self.show_drawing_data(d_X, d_Y, d_cT)
-            plt.show()
-        sample_points = int(d_cL[-1]/self.seperate_length)
-        sampled_SI, d_SI = [], [[]for _ in range(len(strokes))]
-        for s in range(sample_points-1):
-            d_cl = (s+1)*d_cL[-1]/sample_points
-            sampled_i = bisect_left(d_cL, d_cl)
-            if(sampled_i not in sampled_SI):
-                stroke_order = coordinate_to_stroke[sampled_i]
-                d_SI[stroke_order].append(len(sampled_SI))
-                sampled_SI.append(sampled_i)
-                if(len(sampled_SI) > 1):
-                    last_i = sampled_SI[-2]
-                    length_diff = d_cL[sampled_i]-d_cL[last_i]
-                    time_diff = d_cT[sampled_i]-d_cT[last_i]
-                    d_V.append(length_diff/time_diff)
-                    diff_vector = 1j*(d_Y[sampled_i]-d_Y[last_i])               
-                    diff_vector += d_X[sampled_i]-d_X[last_i]
-                    d_DI.append(np.angle(diff_vector, deg=True))
-                else:
-                    d_V.append(d_cL[sampled_i]/d_cT[sampled_i])
-                    diff_vector = 1j*(d_Y[sampled_i]-d_Y[0])               
-                    diff_vector += d_X[sampled_i]-d_X[0]
-                    d_DI.append(np.angle(diff_vector, deg=True))
-        d_X, d_Y, d_cT = d_X[sampled_SI], d_Y[sampled_SI], d_cT[sampled_SI]
-        d_V, d_DI = np.array(d_V), np.array(d_DI)
-        if(self.plot_samples):
-            self.show_drawing_data(d_X, d_Y, d_cT)
-            plt.title('drawing data after discretizing')
-            self.show_drawing_data(d_V, d_DI, d_cT)
-            plt.title('drawing data velocity polar coordinate')
-            plt.show()
-        return d_X, d_Y, d_cT, d_V, d_DI, d_SI
-    
-    def get_drawing_input_output_by_XYWT(self, d_X, d_Y, d_W, d_T):
-        d_X, d_Y, d_cT, d_V, d_DI, d_SI =\
-            self.get_drawing_features_by_XYWT(d_X, d_Y, d_W, d_T)
-        forecast_input, forecast_target = [], []
-        for d_I in d_SI:
-            for i in range(len(d_I)-1):
-                input_coord = d_I[i]
-                v_k, di_k = d_V[input_coord], d_DI[input_coord]
-                x_k, y_k = d_X[input_coord], d_Y[input_coord]
-                forecast_input.append([x_k, y_k, v_k, di_k])
-                forecast_coord = d_I[i+1]
-                x_f, y_f = d_X[forecast_coord], d_Y[forecast_coord]
-                forecast_target.append([x_f+1j*y_f])
-        return np.array(forecast_input), np.array(forecast_target)
+            st = stop_points[s-1]+1 if s > 0 else 0
+            ed = stop_points[s] if s < len(stop_points) else drawing.shape[0]-1
+            if(st >= ed):
+                break
+            d_S = list(range(st, ed+1))
+            ax.plot(drawing[d_S, 0], drawing[d_S, 1], variable[d_S], 'k-')
+            ax.scatter(drawing[st, 0], drawing[st, 1], variable[st], color='b')
+            ax.scatter(drawing[ed, 0], drawing[ed, 1], variable[ed], color='r')
+        ax.legend()
+        ax.set_zlabel(label)
+        ax.set_xlabel('X')
+        ax.set_ylabel('Y')
+        ax.set_xlim([-1, 10])
+        ax.set_ylim([-1, 8])
     
     
     
