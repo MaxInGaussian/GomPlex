@@ -18,7 +18,7 @@ from GomPlex import *
 
 class FeatureLearner(object):
     
-    df_drawing_data = None
+    df_drawing_data, complex_regressor = None, None
     CENTIMETER_TO_PIXELS = 62.992126
     
     def __init__(self, moca_cutoff=20, forecast_step=0.05, sample_time=100,
@@ -44,7 +44,7 @@ class FeatureLearner(object):
         return self
     
     def get_regressor_path(self, reg_meth='GomPlex'):
-        model_path = reg_meth+"_f%.3f_p%d"%(self.forecast_step, self.use_past)
+        model_path = reg_meth+"_f%.3f_p%d_"%(self.forecast_step, self.use_past)
         if(self.use_gender):
             model_path += "g"
         if(self.use_age):
@@ -56,10 +56,10 @@ class FeatureLearner(object):
     def load_regression(self, reg_meth='GomPlex'):
         model_path = self.get_regressor_path(reg_meth)
         if(reg_meth == 'GomPlex'):
-            complex_regressor = GomPlex().load(model_path)
-        return complex_regressor
+            self.complex_regressor = GomPlex().load(model_path)
     
     def eval_features_for_subjects(self, reg_meth='GomPlex'):
+        self.load_regression(reg_meth)
         subjects = self.df_drawing_data.index
         X_feat = []
         accuracy, count_correct, count_case = 0, 0, 0
@@ -73,25 +73,29 @@ class FeatureLearner(object):
             accuracy = count_correct/count_case
             print('  accuracy = %.4f'%(accuracy))
             X_feat.append(feats)
+        path = 'save_models/'+self.get_regressor_path()[:-4]
+        path += '_%s_%.4f.pkl'%(self.complex_regressor.hashed_name, accuracy)
+        self.complex_regressor.save(path)
         return accuracy, np.array(X_feat)
     
     def learn_features_for_subject(self, subject, reg_meth='GomPlex'):
-        complex_regressor = self.load_regression(reg_meth)
+        if(self.complex_regressor is None):
+            self.load_regression(reg_meth)
         subjects = self.df_drawing_data.index
         subjects = list(set(subjects).difference([subject]))
         X_train, y_train = self.get_input_output_matrix_by_subjects(subjects)
-        complex_regressor.fit(X_train, y_train)
+        self.complex_regressor.fit(X_train, y_train)
         X, y = self.get_input_output_matrix_by_subject(subject)
         X_ci, X_nonci = X.copy(), X.copy()
         X_ci[:, 0], X_nonci[:, 0] = 1, 0
-        y_ci = complex_regressor.predict(X_ci)[0]
-        y_nonci = complex_regressor.predict(X_nonci)[0]
+        y_ci = self.complex_regressor.predict(X_ci)[0]
+        y_nonci = self.complex_regressor.predict(X_nonci)[0]
         if(self.show_predicted_drawings):
             self.show_predicted_drawing(X, y, y_ci, y_nonci)
             plt.show()
-        y_ci_sim = 1/np.absolute(y_ci.ravel()-y.ravel())
-        y_nonci_sim = 1/np.absolute(y_nonci.ravel()-y.ravel())
-        ci_prob = np.exp(-y_ci_sim)/(np.exp(-y_ci_sim)+np.exp(-y_nonci_sim))
+        y_ci_sim = np.absolute(y_nonci.ravel()-y.ravel())
+        y_nonci_sim = np.absolute(y_ci.ravel()-y.ravel())
+        ci_prob = np.exp(y_ci_sim)/(np.exp(y_ci_sim)+np.exp(y_nonci_sim))
         return X[0, 0], ci_prob
     
     def show_predicted_drawing(self, X, y, y_ci, y_nonci):
@@ -135,6 +139,7 @@ class FeatureLearner(object):
                 if(new_score < ori_score):
                     gp.save(model_path)
                     print('  Found Better Model!')
+                    self.eval_features_for_subjects()
             print('  Done.')
         elif(reg_meth == "MLP"):
             from keras.models import Sequential
@@ -215,7 +220,7 @@ class FeatureLearner(object):
         d_cT = np.cumsum(d_T)
         rand_bound = d_cT[-1]*(1-self.forecast_step)
         rand_bound_max = bisect_left(d_cT, rand_bound)
-        rand_bound = d_cT[-1]*self.use_past*self.forecast_step
+        rand_bound = d_cT[-1]*self.use_past*self.forecast_step/2
         rand_bound_min = bisect_left(d_cT, rand_bound)
         if(rand_bound_min>=rand_bound_max):
             print(d_cT)
@@ -226,15 +231,15 @@ class FeatureLearner(object):
             d_ci = rand_i
             x, y, v, di = d_X[d_ci], d_Y[d_ci], d_V[d_ci], d_DI[d_ci]
             lp, tp = d_cL[d_ci]/d_cL[-1], d_cT[d_ci]/d_cT[-1]
-            cur_info = [lp, tp, x, y, v, di]
+            cur_info = [v, di]
+            V, DI = [v], [di]
             I = [d_ci]
             for d_p in range(self.use_past):
-                d_ptp = tp-(d_p+1)*self.forecast_step
+                d_ptp = tp-(d_p+1)*self.forecast_step/2
                 d_pi = bisect_left(d_cT, d_cT[-1]*d_ptp)-1
                 I.append(d_pi)
-                x, y = x-d_X[d_pi], y-d_Y[d_pi]
-                v, di = v-d_V[d_pi], di-d_DI[d_pi]
-                cur_info.extend([v, di])
+                V.append(d_V[d_pi]);DI.append(d_DI[d_pi])
+                cur_info.extend([np.mean(V), np.mean(DI)])
             if(np.any(np.isnan(cur_info))):
                 print(cur_info)
             d_ftp = tp+self.forecast_step
@@ -245,7 +250,7 @@ class FeatureLearner(object):
             if(self.show_training_drawings):
                 print(I)
             input.append(cur_info)
-            target.append([d_X[d_fi]+1j*d_Y[d_fi]])
+            target.append([d_X[d_fi]-x+1j*(d_Y[d_fi]-y)])
         return np.array(input), np.array(target)
     
     def get_drawing_features_by_XYWT(self, drawing):
