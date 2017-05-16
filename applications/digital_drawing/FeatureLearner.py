@@ -65,17 +65,17 @@ class FeatureLearner(object):
         accuracy, count_correct, count_case = 0, 0, 0
         for subject in subjects:
             ci, ci_prob = self.learn_features_for_subject(subject, reg_meth)
-            feat_mu, feat_std = np.mean(ci_prob), np.std(ci_prob)
-            feats = [feat_mu, feat_std]
+            feat_mu = np.exp(np.mean(np.log(ci_prob)))
             count_case += 1
             if(int(feat_mu > 0.5) == ci):
                 count_correct += 1
             accuracy = count_correct/count_case
-            print('  accuracy = %.4f'%(accuracy))
-            X_feat.append(feats)
+            print('  accuracy = %.4f (%.4f)'%(accuracy, feat_mu))
+            X_feat.append(ci_prob)
         path = 'save_models/'+self.get_regressor_path()[:-4]
         path += '_%s_%.4f.pkl'%(self.complex_regressor.hashed_name, accuracy)
-        self.complex_regressor.save(path)
+        if(accuracy > 0.7):
+            self.complex_regressor.save(path)
         return accuracy, np.array(X_feat)
     
     def learn_features_for_subject(self, subject, reg_meth='GomPlex'):
@@ -95,7 +95,7 @@ class FeatureLearner(object):
             plt.show()
         y_ci_sim = np.absolute(y_nonci.ravel()-y.ravel())
         y_nonci_sim = np.absolute(y_ci.ravel()-y.ravel())
-        ci_prob = np.exp(y_ci_sim)/(np.exp(y_ci_sim)+np.exp(y_nonci_sim))
+        ci_prob = (y_ci_sim)/((y_ci_sim)+(y_nonci_sim))
         return X[0, 0], ci_prob
     
     def show_predicted_drawing(self, X, y, y_ci, y_nonci):
@@ -221,7 +221,7 @@ class FeatureLearner(object):
         rand_bound = d_cT[-1]*(1-self.forecast_step)
         rand_bound_max = bisect_left(d_cT, rand_bound)
         rand_bound = d_cT[-1]*self.use_past*self.forecast_step/2
-        rand_bound_min = bisect_left(d_cT, rand_bound)
+        rand_bound_min = max(self.use_past, bisect_left(d_cT, rand_bound))
         if(rand_bound_min>=rand_bound_max):
             print(d_cT)
         rand_range = range(rand_bound_min, rand_bound_max)
@@ -231,17 +231,18 @@ class FeatureLearner(object):
             d_ci = rand_i
             x, y, v, di = d_X[d_ci], d_Y[d_ci], d_V[d_ci], d_DI[d_ci]
             lp, tp = d_cL[d_ci]/d_cL[-1], d_cT[d_ci]/d_cT[-1]
-            cur_info = [v, di]
+            cur_info = [x, y]
             V, DI = [v], [di]
             I = [d_ci]
             for d_p in range(self.use_past):
                 d_ptp = tp-(d_p+1)*self.forecast_step/2
-                d_pi = bisect_left(d_cT, d_cT[-1]*d_ptp)-1
+                d_pi = max(0, bisect_left(d_cT, d_cT[-1]*d_ptp)-1)
                 I.append(d_pi)
-                V.append(d_V[d_pi]);DI.append(d_DI[d_pi])
-                cur_info.extend([np.mean(V), np.mean(DI)])
+                V.append(np.mean(d_V[d_pi:d_ci]))
+                DI.append(np.mean(d_DI[d_pi:d_ci]))
+                cur_info.extend([V[-1], DI[-1]])
             if(np.any(np.isnan(cur_info))):
-                print(cur_info)
+                print(I)
             d_ftp = tp+self.forecast_step
             d_fi = bisect_left(d_cT, d_cT[-1]*d_ftp)
             I.append(d_fi)
@@ -250,7 +251,7 @@ class FeatureLearner(object):
             if(self.show_training_drawings):
                 print(I)
             input.append(cur_info)
-            target.append([d_X[d_fi]-x+1j*(d_Y[d_fi]-y)])
+            target.append([d_X[d_fi]+1j*(d_Y[d_fi])])
         return np.array(input), np.array(target)
     
     def get_drawing_features_by_XYWT(self, drawing):
