@@ -15,4 +15,5 @@ model = FeatureLearner(moca_cutoff=20, forecast_step=0.02, sample_time=100,
         show_training_drawings=False, show_predicted_drawings=False)
 
 model.load_drawing_data(DRAWING_RAW_DATA_PATH)
+
 accuracy, X_feat = model.eval_features_for_subjects()

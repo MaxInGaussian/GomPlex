@@ -62,19 +62,29 @@ class FeatureLearner(object):
         self.load_regression(reg_meth)
         subjects = self.df_drawing_data.index
         X_feat = []
-        accuracy, count_correct, count_case = 0, 0, 0
+        cfs_mat = np.zeros((2, 2))
         for subject in subjects:
             ci, ci_prob = self.learn_features_for_subject(subject, reg_meth)
             feat_mu = np.exp(np.mean(np.log(ci_prob)))
-            count_case += 1
-            if(int(feat_mu > 0.5) == ci):
-                count_correct += 1
-            accuracy = count_correct/count_case
-            print('  accuracy = %.4f (%.4f)'%(accuracy, feat_mu))
+            if(feat_mu > 0.5 and ci == 1):
+                cfs_mat[0, 0] += 1
+            elif(feat_mu > 0.5 and ci == 0):
+                cfs_mat[0, 1] += 1
+            elif(feat_mu < 0.5 and ci == 1):
+                cfs_mat[1, 0] += 1
+            elif(feat_mu < 0.5 and ci == 0):
+                cfs_mat[1, 1] += 1
+            accuracy = (cfs_mat[0, 0]+cfs_mat[1, 1])/np.sum(cfs_mat)
+            sensitivity = 0 if np.sum(cfs_mat[0]) == 0 else\
+                cfs_mat[0, 0]/np.sum(cfs_mat[0])
+            specificity = 0 if np.sum(cfs_mat[1]) == 0 else\
+                cfs_mat[1, 1]/np.sum(cfs_mat[1])
+            print('  accuracy = %.4f, sensitivity = %.4f, specificity = %.4f'%(
+                accuracy, sensitivity, specificity))
             X_feat.append(ci_prob)
         path = 'save_models/'+self.get_regressor_path()[:-4]
         path += '_%s_%.4f.pkl'%(self.complex_regressor.hashed_name, accuracy)
-        if(accuracy > 0.7):
+        if(accuracy > 0.7 or sensitivity > 0.7 or specificity > 0.7):
             self.complex_regressor.save(path)
         return accuracy, np.array(X_feat)
     
@@ -95,7 +105,7 @@ class FeatureLearner(object):
             plt.show()
         y_ci_sim = np.absolute(y_nonci.ravel()-y.ravel())
         y_nonci_sim = np.absolute(y_ci.ravel()-y.ravel())
-        ci_prob = (y_ci_sim)/((y_ci_sim)+(y_nonci_sim))
+        ci_prob = np.exp(y_ci_sim)/(np.exp(y_ci_sim)+np.exp(y_nonci_sim))
         return X[0, 0], ci_prob
     
     def show_predicted_drawing(self, X, y, y_ci, y_nonci):
