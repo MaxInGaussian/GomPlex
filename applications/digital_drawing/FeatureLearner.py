@@ -83,8 +83,10 @@ class FeatureLearner(object):
                 accuracy, sensitivity, specificity))
             X_feat.append(ci_prob)
         path = 'save_models/'+self.get_regressor_path()[:-4]
-        path += '_%s_%.4f.pkl'%(self.complex_regressor.hashed_name, accuracy)
+        path += '_%s_'%(self.complex_regressor.hashed_name)
         if(accuracy > 0.7 or sensitivity > 0.7 or specificity > 0.7):
+            path += '%d_%d_%d_%d.pkl'%(
+                cfs_mat[0, 0],cfs_mat[0, 1], cfs_mat[1, 0], cfs_mat[1, 1])
             self.complex_regressor.save(path)
         return accuracy, np.array(X_feat)
     
