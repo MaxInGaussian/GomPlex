@@ -146,9 +146,9 @@ class FeatureLearner(object):
                 best_gp = GomPlex().load(model_path).fit(X_train, y_train)
                 ori_score = self.metric.eval(y_test, *best_gp.predict(X_test))
                 print('  ori score - %s=%.6f'%(self.metric.metric, ori_score))
-                if(new_score < ori_score):
+                if(new_score*0.9 < ori_score):
                     gp.save(model_path)
-                    print('  Found Better Model!')
+                    print('  Found New Model!')
                     self.eval_features_for_subjects()
             print('  Done.')
         elif(reg_meth == "MLP"):
