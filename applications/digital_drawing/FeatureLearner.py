@@ -237,22 +237,20 @@ class FeatureLearner(object):
         if(rand_bound_min>=rand_bound_max):
             print(d_cT)
         rand_range = range(rand_bound_min, rand_bound_max)
-        rand_I = npr.choice(rand_range, self.sample_time)
         input, target = [], []
-        for rand_i in rand_I:
-            d_ci = rand_i
+        while(len(input) < self.sample_time):
+            d_ci = npr.choice(rand_range)
             x, y, v, di = d_X[d_ci], d_Y[d_ci], d_V[d_ci], d_DI[d_ci]
             lp, tp = d_cL[d_ci]/d_cL[-1], d_cT[d_ci]/d_cT[-1]
-            cur_info = [x, y]
+            cur_info = []
             V, DI = [v], [di]
             I = [d_ci]
             for d_p in range(self.use_past):
                 d_ptp = tp-(d_p+1)*self.forecast_step/2
                 d_pi = max(0, bisect_left(d_cT, d_cT[-1]*d_ptp)-1)
+                cur_info.extend([d_X[I[-1]], d_Y[I[-1]],
+                    np.mean(d_V[d_pi:d_ci]), np.mean(d_DI[d_pi:d_ci])])
                 I.append(d_pi)
-                V.append(np.mean(d_V[d_pi:d_ci]))
-                DI.append(np.mean(d_DI[d_pi:d_ci]))
-                cur_info.extend([V[-1], DI[-1]])
             if(np.any(np.isnan(cur_info))):
                 print(I)
             d_ftp = tp+self.forecast_step
