@@ -3,6 +3,7 @@
 #  Author: Max W. Y. Lam (maxingaussian@gmail.com)
 ################################################################################
 
+import sys
 import numpy as np
 
 __all__ = [
@@ -38,6 +39,7 @@ class Trainer(object):
             self.cost_records.append(cost)
             print("  iter %d - best %.8f - update %.8f - %d/%d"%(
                 self.iter, self.min_cost, cost, self.div_count, self.iter_tol))
+            sys.stdout.flush()
             if(np.mean(self.cost_records[-self.early_stop:]) > 
                 np.mean(self.min_cost_records[-self.early_stop//2:]) and
                     self.iter > self.early_stop):
