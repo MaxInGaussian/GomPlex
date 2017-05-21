@@ -14,6 +14,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from bisect import bisect_left
 
+from sklearn.metrics import roc_auc_score
+
 from GomPlex import *
 
 class FeatureLearner(object):
@@ -21,8 +23,8 @@ class FeatureLearner(object):
     df_drawing_data, complex_regressor = None, None
     CENTIMETER_TO_PIXELS = 62.992126
     
-    def __init__(self, moca_cutoff=20, forecast_step=0.05, sample_time=100,
-        use_past=3, use_gender=True, use_age=True, use_edu_level=True,
+    def __init__(self, moca_cutoff=20, forecast_step=0.02, sample_time=100,
+        use_past=5, use_gender=True, use_age=True, use_edu_level=True,
         stroke_size_tol=10, stroke_length_tol=1, centimeter=True, metric='nmse',
         show_training_drawings=False, show_predicted_drawings=False):
         self.moca_cutoff = moca_cutoff
@@ -61,10 +63,11 @@ class FeatureLearner(object):
     def eval_features_for_subjects(self, reg_meth='GomPlex'):
         self.load_regression(reg_meth)
         subjects = self.df_drawing_data.index
-        X_feat = []
+        X_feat, cis, ci_probs = [], [], []
         cfs_mat = np.zeros((2, 2))
         for subject in subjects:
             ci, ci_prob = self.learn_features_for_subject(subject, reg_meth)
+            cis.append(ci); ci_probs.append(ci_prob)
             feat_mu = np.exp(np.mean(np.log(ci_prob)))
             if(feat_mu > 0.5 and ci == 1):
                 cfs_mat[0, 0] += 1
@@ -75,20 +78,26 @@ class FeatureLearner(object):
             elif(feat_mu < 0.5 and ci == 0):
                 cfs_mat[1, 1] += 1
             accuracy = (cfs_mat[0, 0]+cfs_mat[1, 1])/np.sum(cfs_mat)
-            sensitivity = 0 if np.sum(cfs_mat[0]) == 0 else\
+            precision = 0 if np.sum(cfs_mat[:, 0]) == 0 else\
+                cfs_mat[0, 0]/np.sum(cfs_mat[:, 0])
+            recall = 0 if np.sum(cfs_mat[0]) == 0 else\
                 cfs_mat[0, 0]/np.sum(cfs_mat[0])
             specificity = 0 if np.sum(cfs_mat[1]) == 0 else\
                 cfs_mat[1, 1]/np.sum(cfs_mat[1])
-            print('  accuracy = %.4f, sensitivity = %.4f, specificity = %.4f'%(
-                accuracy, sensitivity, specificity))
+            F1 = 2*(precision*recall)/(precision+recall)
+            print('  specificity=%.4f, precision=%.4f, recall=%.4f, F1=%.4f'%(
+                specificity, precision, recall, F1))
             X_feat.append(ci_prob)
+        print('*'*80)
+        AUC = roc_auc_score(cis, ci_probs)
+        print('  recall=%.4f, F1=%.4f, AUC=%.4f'%(recall, F1, AUC))
         path = 'save_models/'+self.get_regressor_path()[:-4]
         path += '_%s_'%(self.complex_regressor.hashed_name)
-        if(accuracy > 0.7 or sensitivity > 0.7 or specificity > 0.7):
+        if(recall > 0.9 or F1 > 0.8 or AUC > 0.8):
             path += '%d_%d_%d_%d.pkl'%(
                 cfs_mat[0, 0],cfs_mat[0, 1], cfs_mat[1, 0], cfs_mat[1, 1])
             self.complex_regressor.save(path)
-        return accuracy, np.array(X_feat)
+        return accuracy, precision, recall, F1, AUC, np.array(X_feat)
     
     def learn_features_for_subject(self, subject, reg_meth='GomPlex'):
         if(self.complex_regressor is None):
