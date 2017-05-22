@@ -79,9 +79,10 @@ class FeatureLearner(object):
                 cfs_mat[0, 0]/np.sum(cfs_mat[0])
             specificity = 0 if np.sum(cfs_mat[1]) == 0 else\
                 cfs_mat[1, 1]/np.sum(cfs_mat[1])
-            F1 = 2*(precision*recall)/(precision+recall)
-            print('  specificity=%.4f, precision=%.4f, recall=%.4f, F1=%.4f'%(
-                specificity, precision, recall, F1))
+            F1 = 0 if precision+recall == 0 else\
+                2*(precision*recall)/(precision+recall)
+            print('  (%d-%.4f), precision=%.4f, recall=%.4f, F1=%.4f'%(
+                ci, prob_ratio, precision, recall, F1))
         print('*'*80)
         print('  recall=%.4f, F1=%.4f'%(recall, F1))
         path = 'save_models/'+self.get_regressor_path()[:-4]
