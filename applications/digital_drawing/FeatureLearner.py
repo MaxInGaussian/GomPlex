@@ -61,11 +61,9 @@ class FeatureLearner(object):
     def eval_features_for_subjects(self, reg_meth='GomPlex'):
         self.load_regression(reg_meth)
         subjects = self.df_drawing_data.index
-        X_feat, cis, ci_probs = [], [], []
         cfs_mat = np.zeros((2, 2))
         for subject in subjects:
             ci, prob_ratio = self.learn_features_for_subject(subject, reg_meth)
-            cis.append(ci); ci_probs.append(ci_prob)
             if(prob_ratio > 1 and ci == 1):
                 cfs_mat[0, 0] += 1
             elif(prob_ratio > 1 and ci == 0):
@@ -84,7 +82,6 @@ class FeatureLearner(object):
             F1 = 2*(precision*recall)/(precision+recall)
             print('  specificity=%.4f, precision=%.4f, recall=%.4f, F1=%.4f'%(
                 specificity, precision, recall, F1))
-            X_feat.append(ci_prob)
         print('*'*80)
         print('  recall=%.4f, F1=%.4f'%(recall, F1))
         path = 'save_models/'+self.get_regressor_path()[:-4]
@@ -93,7 +90,7 @@ class FeatureLearner(object):
             path += '%d_%d_%d_%d.pkl'%(
                 cfs_mat[0, 0],cfs_mat[0, 1], cfs_mat[1, 0], cfs_mat[1, 1])
             self.complex_regressor.save(path)
-        return accuracy, precision, recall, F1, np.array(X_feat)
+        return accuracy, precision, recall, F1
     
     def learn_features_for_subject(self, subject, reg_meth='GomPlex'):
         if(self.complex_regressor is None):
