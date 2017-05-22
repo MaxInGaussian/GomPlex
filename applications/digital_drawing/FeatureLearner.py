@@ -66,9 +66,9 @@ class FeatureLearner(object):
             ci, prob_ratio = self.learn_features_for_subject(subject, reg_meth)
             if(prob_ratio > 1 and ci == 1):
                 cfs_mat[0, 0] += 1
-            elif(prob_ratio > 1 and ci == 0):
-                cfs_mat[0, 1] += 1
             elif(prob_ratio < 1 and ci == 1):
+                cfs_mat[0, 1] += 1
+            elif(prob_ratio > 1 and ci == 0):
                 cfs_mat[1, 0] += 1
             elif(prob_ratio < 1 and ci == 0):
                 cfs_mat[1, 1] += 1
@@ -81,10 +81,10 @@ class FeatureLearner(object):
                 cfs_mat[1, 1]/np.sum(cfs_mat[1])
             F1 = 0 if precision+recall == 0 else\
                 2*(precision*recall)/(precision+recall)
-            print('  (%d-%.4f), precision=%.4f, recall=%.4f, F1=%.4f'%(
+            print('  (%d|%.4f), precision=%.4f, recall=%.4f, F1=%.4f'%(
                 ci, prob_ratio, precision, recall, F1))
-        print('*'*80)
-        print('  recall=%.4f, F1=%.4f'%(recall, F1))
+            print('             TP=%d, FN=%d, FP=%d, TN=%d'%(
+                cfs_mat[0, 0],cfs_mat[0, 1], cfs_mat[1, 0], cfs_mat[1, 1]))
         path = 'save_models/'+self.get_regressor_path()[:-4]
         path += '_%s_'%(self.complex_regressor.hashed_name)
         if(recall > 0.8 or F1 > 0.8):
@@ -105,11 +105,10 @@ class FeatureLearner(object):
         X_ci[:, 0], X_nonci[:, 0] = 1, 0
         mu_ci, std_ci = self.complex_regressor.predict(X_ci)
         mu_nonci, std_nonci = self.complex_regressor.predict(X_nonci)
-        ci_p = (self.df_drawing_data['MoCA Total'] < self.moca_cutoff).count()
-        ci_p /= self.df_drawing_data['MoCA Total'].count()
-        log_p_ci = np.log(ci_p)-np.sum(((mu_ci-y)/std_ci)**2)
-        log_p_nonci = np.log(1-ci_p)-np.sum(((mu_nonci-y)/std_nonci)**2)
-        return X[0, 0], log_p_ci/log_p_nonci
+        ci_p = (self.df_drawing_data['MoCA Total'] < self.moca_cutoff).mean()
+        log_p_ci = np.log(ci_p)-np.sum(np.absolute((mu_ci-y)/std_ci)**2)
+        log_p_nonci = np.log(1-ci_p)-np.sum(np.absolute(((mu_nonci-y)/std_nonci)**2))
+        return X[0, 0], np.exp(log_p_ci)/np.exp(log_p_nonci)
     
     def show_predicted_drawing(self, X, y, y_ci, y_nonci):
         fig = plt.figure()
