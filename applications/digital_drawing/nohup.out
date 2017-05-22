@@ -1,0 +1,767 @@
+# Preprocessing Raw Drawing Data
+  Gathered 37400 Training Examples.
+  Gathered 15600 Testing Examples.
+  Done.
+# Training GomPlex
+  iter 1 - best inf - update 2.01363788 - 0/30
+  iter 2 - best 2.01363788 - update 2.00916562 - 0/30
+# Preprocessing Raw Drawing Data
+  Gathered 37400 Training Examples.
+  Gathered 15600 Testing Examples.
+  Done.
+# Training GomPlex
+  iter 1 - best inf - update 2.00012898 - 0/30
+  iter 3 - best 2.00916562 - update 2.00944471 - 0/30
+  iter 4 - best 2.00916562 - update 2.00965602 - 1/30
+  iter 2 - best 2.00012898 - update 1.99979741 - 0/30
+  iter 5 - best 2.00916562 - update 2.00236844 - 2/30
+  iter 6 - best 2.00236844 - update 2.00274733 - 0/30
+  iter 3 - best 1.99979741 - update 2.02357348 - 1/30
+  iter 7 - best 2.00236844 - update 2.00353630 - 1/30
+  iter 8 - best 2.00236844 - update 2.00365001 - 2/30
+  iter 4 - best 1.99979741 - update 2.01952312 - 2/30
+  iter 9 - best 2.00236844 - update 2.00371359 - 3/30
+  iter 10 - best 2.00236844 - update 2.00140033 - 4/30
+  iter 5 - best 1.99979741 - update 2.02897839 - 3/30
+  iter 11 - best 2.00140033 - update 2.00018124 - 5/30
+  iter 12 - best 2.00018124 - update 2.00029799 - 0/30
+  iter 13 - best 2.00018124 - update 1.99932895 - 1/30
+  iter 6 - best 1.99979741 - update 2.00866294 - 4/30
+  iter 14 - best 1.99932895 - update 1.99648575 - 2/30
+  iter 15 - best 1.99648575 - update 1.99844896 - 0/30
+  iter 7 - best 1.99979741 - update 2.00820649 - 5/30
+  iter 16 - best 1.99648575 - update 1.99759308 - 2/30
+  iter 17 - best 1.99648575 - update 1.99679034 - 4/30
+  iter 8 - best 1.99979741 - update 2.01016667 - 6/30
+  iter 18 - best 1.99648575 - update 1.99594754 - 5/30
+  iter 19 - best 1.99594754 - update 1.99581358 - 6/30
+  iter 9 - best 1.99979741 - update 2.00921243 - 7/30
+  iter 20 - best 1.99581358 - update 1.99585093 - 7/30
+  iter 21 - best 1.99581358 - update 1.99559887 - 9/30
+  iter 10 - best 1.99979741 - update 2.00453136 - 8/30
+  iter 22 - best 1.99559887 - update 1.99537186 - 10/30
+  iter 23 - best 1.99537186 - update 1.99524053 - 12/30
+  iter 11 - best 1.99979741 - update 2.00400766 - 9/30
+  iter 24 - best 1.99524053 - update 1.99499882 - 14/30
+  iter 25 - best 1.99499882 - update 1.99813883 - 16/30
+  iter 26 - best 1.99499882 - update 1.99737710 - 18/30
+  iter 12 - best 1.99979741 - update 2.00490763 - 11/30
+  iter 27 - best 1.99499882 - update 1.99700494 - 20/30
+  iter 28 - best 1.99499882 - update 1.99640829 - 22/30
+  iter 13 - best 1.99979741 - update 2.00156462 - 13/30
+  iter 29 - best 1.99499882 - update 1.99640076 - 24/30
+  iter 30 - best 1.99499882 - update 1.99604190 - 26/30
+  iter 14 - best 1.99979741 - update 1.99927436 - 15/30
+  iter 31 - best 1.99499882 - update 1.99691697 - 28/30
+  iter 15 - best 1.99927436 - update 1.99645929 - 17/30
+  iter 16 - best 1.99645929 - update 1.99398186 - 0/30
+  iter 17 - best 1.99398186 - update 1.99651198 - 0/30
+  iter 18 - best 1.99398186 - update 1.99510604 - 2/30
+  iter 19 - best 1.99398186 - update 1.95689803 - 4/30
+  iter 20 - best 1.95689803 - update 1.95567835 - 0/30
+  iter 21 - best 1.95567835 - update 1.95525423 - 0/30
+  iter 22 - best 1.95525423 - update 1.99861289 - 2/30
+  iter 23 - best 1.95525423 - update 1.99338958 - 4/30
+  iter 24 - best 1.95525423 - update 1.99449637 - 6/30
+  iter 25 - best 1.95525423 - update 1.99315075 - 8/30
+  iter 26 - best 1.95525423 - update 1.98123796 - 10/30
+  iter 27 - best 1.95525423 - update 1.98218625 - 12/30
+  iter 28 - best 1.95525423 - update 1.95602981 - 14/30
+  iter 29 - best 1.95525423 - update 1.95547562 - 16/30
+  iter 30 - best 1.95525423 - update 2.00001380 - 18/30
+  iter 31 - best 1.95525423 - update 1.99183460 - 20/30
+  iter 32 - best 1.95525423 - update 1.98751956 - 22/30
+  iter 33 - best 1.95525423 - update 1.98816865 - 24/30
+  iter 34 - best 1.95525423 - update 1.98197721 - 26/30
+  iter 35 - best 1.95525423 - update 1.97796165 - 28/30
+  Done.
+# Choosing GomPlex Models
+  new score - nmse=1.007668
+  ori score - nmse=1.033925
+  Found New Model!
+  (1|761.9727), precision=1.0000, recall=1.0000, F1=1.0000
+             TP=1, FN=0, FP=0, TN=0
+  (0|324.5619), precision=0.5000, recall=1.0000, F1=0.6667
+             TP=1, FN=0, FP=1, TN=0
+  (1|1.0891), precision=0.6667, recall=1.0000, F1=0.8000
+             TP=2, FN=0, FP=1, TN=0
+  (1|22.7580), precision=0.7500, recall=1.0000, F1=0.8571
+             TP=3, FN=0, FP=1, TN=0
+  (0|18.0079), precision=0.6000, recall=1.0000, F1=0.7500
+             TP=3, FN=0, FP=2, TN=0
+  (1|0.1414), precision=0.6000, recall=0.7500, F1=0.6667
+             TP=3, FN=1, FP=2, TN=0
+  (1|7.2870), precision=0.6667, recall=0.8000, F1=0.7273
+             TP=4, FN=1, FP=2, TN=0
+  (1|nan), precision=0.6667, recall=0.8000, F1=0.7273
+             TP=4, FN=1, FP=2, TN=0
+  (0|2067.6219), precision=0.5714, recall=0.8000, F1=0.6667
+             TP=4, FN=1, FP=3, TN=0
+  (1|2.8317), precision=0.6250, recall=0.8333, F1=0.7143
+             TP=5, FN=1, FP=3, TN=0
+  (1|38.9096), precision=0.6667, recall=0.8571, F1=0.7500
+             TP=6, FN=1, FP=3, TN=0
+  (1|8.2482), precision=0.7000, recall=0.8750, F1=0.7778
+             TP=7, FN=1, FP=3, TN=0
+  (1|12.8978), precision=0.7273, recall=0.8889, F1=0.8000
+             TP=8, FN=1, FP=3, TN=0
+  (1|0.2443), precision=0.7273, recall=0.8000, F1=0.7619
+             TP=8, FN=2, FP=3, TN=0
+  (1|2.3545), precision=0.7500, recall=0.8182, F1=0.7826
+             TP=9, FN=2, FP=3, TN=0
+  (1|1.6535), precision=0.7692, recall=0.8333, F1=0.8000
+             TP=10, FN=2, FP=3, TN=0
+  (1|2.1955), precision=0.7857, recall=0.8462, F1=0.8148
+             TP=11, FN=2, FP=3, TN=0
+  (1|7.5399), precision=0.8000, recall=0.8571, F1=0.8276
+             TP=12, FN=2, FP=3, TN=0
+  (1|1.6029), precision=0.8125, recall=0.8667, F1=0.8387
+             TP=13, FN=2, FP=3, TN=0
+  (1|4.6131), precision=0.8235, recall=0.8750, F1=0.8485
+             TP=14, FN=2, FP=3, TN=0
+  (0|0.4225), precision=0.8235, recall=0.8750, F1=0.8485
+             TP=14, FN=2, FP=3, TN=1
+  (1|1.5007), precision=0.8333, recall=0.8824, F1=0.8571
+             TP=15, FN=2, FP=3, TN=1
+  (0|3.8303), precision=0.7895, recall=0.8824, F1=0.8333
+             TP=15, FN=2, FP=4, TN=1
+  (1|75.8436), precision=0.8000, recall=0.8889, F1=0.8421
+             TP=16, FN=2, FP=4, TN=1
+  (1|nan), precision=0.8000, recall=0.8889, F1=0.8421
+             TP=16, FN=2, FP=4, TN=1
+  (1|1.1075), precision=0.8095, recall=0.8947, F1=0.8500
+             TP=17, FN=2, FP=4, TN=1
+  (1|1.6254), precision=0.8182, recall=0.9000, F1=0.8571
+             TP=18, FN=2, FP=4, TN=1
+  (1|3.3404), precision=0.8261, recall=0.9048, F1=0.8636
+             TP=19, FN=2, FP=4, TN=1
+  (1|2.7429), precision=0.8333, recall=0.9091, F1=0.8696
+             TP=20, FN=2, FP=4, TN=1
+  (1|3.2407), precision=0.8400, recall=0.9130, F1=0.8750
+             TP=21, FN=2, FP=4, TN=1
+  (1|1.6242), precision=0.8462, recall=0.9167, F1=0.8800
+             TP=22, FN=2, FP=4, TN=1
+  (1|0.2669), precision=0.8462, recall=0.8800, F1=0.8627
+             TP=22, FN=3, FP=4, TN=1
+  (1|6.5544), precision=0.8519, recall=0.8846, F1=0.8679
+             TP=23, FN=3, FP=4, TN=1
+  (1|1.3433), precision=0.8571, recall=0.8889, F1=0.8727
+             TP=24, FN=3, FP=4, TN=1
+  (1|3.0829), precision=0.8621, recall=0.8929, F1=0.8772
+             TP=25, FN=3, FP=4, TN=1
+  (1|2.1789), precision=0.8667, recall=0.8966, F1=0.8814
+             TP=26, FN=3, FP=4, TN=1
+  (1|1.7525), precision=0.8710, recall=0.9000, F1=0.8852
+             TP=27, FN=3, FP=4, TN=1
+  (1|1.4767), precision=0.8750, recall=0.9032, F1=0.8889
+             TP=28, FN=3, FP=4, TN=1
+  (1|1.2558), precision=0.8788, recall=0.9062, F1=0.8923
+             TP=29, FN=3, FP=4, TN=1
+  (1|2.0438), precision=0.8824, recall=0.9091, F1=0.8955
+             TP=30, FN=3, FP=4, TN=1
+  (1|0.0392), precision=0.8824, recall=0.8824, F1=0.8824
+             TP=30, FN=4, FP=4, TN=1
+  (1|0.9921), precision=0.8824, recall=0.8571, F1=0.8696
+             TP=30, FN=5, FP=4, TN=1
+  (1|1.9978), precision=0.8857, recall=0.8611, F1=0.8732
+             TP=31, FN=5, FP=4, TN=1
+  (1|0.3821), precision=0.8857, recall=0.8378, F1=0.8611
+             TP=31, FN=6, FP=4, TN=1
+  (1|2.0452), precision=0.8889, recall=0.8421, F1=0.8649
+             TP=32, FN=6, FP=4, TN=1
+  (1|0.7580), precision=0.8889, recall=0.8205, F1=0.8533
+             TP=32, FN=7, FP=4, TN=1
+  (1|1.7734), precision=0.8919, recall=0.8250, F1=0.8571
+             TP=33, FN=7, FP=4, TN=1
+  (1|1.2077), precision=0.8947, recall=0.8293, F1=0.8608
+             TP=34, FN=7, FP=4, TN=1
+  (1|2.4065), precision=0.8974, recall=0.8333, F1=0.8642
+             TP=35, FN=7, FP=4, TN=1
+  (1|2.9644), precision=0.9000, recall=0.8372, F1=0.8675
+             TP=36, FN=7, FP=4, TN=1
+  (1|2.0533), precision=0.9024, recall=0.8409, F1=0.8706
+             TP=37, FN=7, FP=4, TN=1
+  (1|1.6688), precision=0.9048, recall=0.8444, F1=0.8736
+             TP=38, FN=7, FP=4, TN=1
+  (0|2144.4523), precision=0.8837, recall=0.8444, F1=0.8636
+             TP=38, FN=7, FP=5, TN=1
+  (1|1.1065), precision=0.8864, recall=0.8478, F1=0.8667
+             TP=39, FN=7, FP=5, TN=1
+  (1|1.7386), precision=0.8889, recall=0.8511, F1=0.8696
+             TP=40, FN=7, FP=5, TN=1
+  (1|1.6975), precision=0.8913, recall=0.8542, F1=0.8723
+             TP=41, FN=7, FP=5, TN=1
+  (0|1.3605), precision=0.8723, recall=0.8542, F1=0.8632
+             TP=41, FN=7, FP=6, TN=1
+  (1|5.1440), precision=0.8750, recall=0.8571, F1=0.8660
+             TP=42, FN=7, FP=6, TN=1
+  (0|0.2150), precision=0.8750, recall=0.8571, F1=0.8660
+             TP=42, FN=7, FP=6, TN=2
+  (1|0.9366), precision=0.8750, recall=0.8400, F1=0.8571
+             TP=42, FN=8, FP=6, TN=2
+  (0|0.8815), precision=0.8750, recall=0.8400, F1=0.8571
+             TP=42, FN=8, FP=6, TN=3
+  (1|nan), precision=0.8750, recall=0.8400, F1=0.8571
+             TP=42, FN=8, FP=6, TN=3
+  (1|1.4660), precision=0.8776, recall=0.8431, F1=0.8600
+             TP=43, FN=8, FP=6, TN=3
+  (1|1.5372), precision=0.8800, recall=0.8462, F1=0.8627
+             TP=44, FN=8, FP=6, TN=3
+  (0|0.3822), precision=0.8800, recall=0.8462, F1=0.8627
+             TP=44, FN=8, FP=6, TN=4
+  (0|3957.5118), precision=0.8627, recall=0.8462, F1=0.8544
+             TP=44, FN=8, FP=7, TN=4
+  (1|1.6157), precision=0.8654, recall=0.8491, F1=0.8571
+             TP=45, FN=8, FP=7, TN=4
+  (0|3.6081), precision=0.8491, recall=0.8491, F1=0.8491
+             TP=45, FN=8, FP=8, TN=4
+  (0|0.2569), precision=0.8491, recall=0.8491, F1=0.8491
+             TP=45, FN=8, FP=8, TN=5
+  (0|2.5955), precision=0.8333, recall=0.8491, F1=0.8411
+             TP=45, FN=8, FP=9, TN=5
+  (1|275.9050), precision=0.8364, recall=0.8519, F1=0.8440
+             TP=46, FN=8, FP=9, TN=5
+  (1|19.6658), precision=0.8393, recall=0.8545, F1=0.8468
+             TP=47, FN=8, FP=9, TN=5
+  (1|2.7718), precision=0.8421, recall=0.8571, F1=0.8496
+             TP=48, FN=8, FP=9, TN=5
+  (1|1.2173), precision=0.8448, recall=0.8596, F1=0.8522
+             TP=49, FN=8, FP=9, TN=5
+  (0|0.4031), precision=0.8448, recall=0.8596, F1=0.8522
+             TP=49, FN=8, FP=9, TN=6
+  (1|nan), precision=0.8448, recall=0.8596, F1=0.8522
+             TP=49, FN=8, FP=9, TN=6
+  (1|53.4105), precision=0.8475, recall=0.8621, F1=0.8547
+             TP=50, FN=8, FP=9, TN=6
+  (1|78.6770), precision=0.8500, recall=0.8644, F1=0.8571
+             TP=51, FN=8, FP=9, TN=6
+  (1|2.5176), precision=0.8525, recall=0.8667, F1=0.8595
+             TP=52, FN=8, FP=9, TN=6
+  (1|4.7854), precision=0.8548, recall=0.8689, F1=0.8618
+             TP=53, FN=8, FP=9, TN=6
+  (1|8.2946), precision=0.8571, recall=0.8710, F1=0.8640
+             TP=54, FN=8, FP=9, TN=6
+  (0|9.0233), precision=0.8438, recall=0.8710, F1=0.8571
+             TP=54, FN=8, FP=10, TN=6
+  (0|0.4894), precision=0.8438, recall=0.8710, F1=0.8571
+             TP=54, FN=8, FP=10, TN=7
+  (0|19.2347), precision=0.8308, recall=0.8710, F1=0.8504
+             TP=54, FN=8, FP=11, TN=7
+  (0|4.2347), precision=0.8182, recall=0.8710, F1=0.8438
+             TP=54, FN=8, FP=12, TN=7
+  (0|2.1765), precision=0.8060, recall=0.8710, F1=0.8372
+             TP=54, FN=8, FP=13, TN=7  Done.
+# Choosing GomPlex Models
+  new score - nmse=0.993774
+  ori score - nmse=0.999636
+  Found New Model!
+  (1|0.4545), precision=0.0000, recall=0.0000, F1=0.0000
+             TP=0, FN=1, FP=0, TN=0
+  (0|0.3185), precision=0.0000, recall=0.0000, F1=0.0000
+             TP=0, FN=1, FP=0, TN=1
+  (1|0.2819), precision=0.0000, recall=0.0000, F1=0.0000
+             TP=0, FN=2, FP=0, TN=1
+  (1|23.6432), precision=1.0000, recall=0.3333, F1=0.5000
+             TP=1, FN=2, FP=0, TN=1
+  (0|0.0024), precision=1.0000, recall=0.3333, F1=0.5000
+             TP=1, FN=2, FP=0, TN=2
+  (1|207.6338), precision=1.0000, recall=0.5000, F1=0.6667
+             TP=2, FN=2, FP=0, TN=2
+  (1|2.7439), precision=1.0000, recall=0.6000, F1=0.7500
+             TP=3, FN=2, FP=0, TN=2
+  (1|nan), precision=1.0000, recall=0.6000, F1=0.7500
+             TP=3, FN=2, FP=0, TN=2
+  (0|0.1765), precision=1.0000, recall=0.6000, F1=0.7500
+             TP=3, FN=2, FP=0, TN=3
+  (1|2.4911), precision=1.0000, recall=0.6667, F1=0.8000
+             TP=4, FN=2, FP=0, TN=3
+  (1|0.0749), precision=1.0000, recall=0.5714, F1=0.7273
+             TP=4, FN=3, FP=0, TN=3
+  (1|12.9932), precision=1.0000, recall=0.6250, F1=0.7692
+             TP=5, FN=3, FP=0, TN=3
+  (1|21.8548), precision=1.0000, recall=0.6667, F1=0.8000
+             TP=6, FN=3, FP=0, TN=3
+  (1|15.5689), precision=1.0000, recall=0.7000, F1=0.8235
+             TP=7, FN=3, FP=0, TN=3
+  (1|2.1987), precision=1.0000, recall=0.7273, F1=0.8421
+             TP=8, FN=3, FP=0, TN=3
+  (1|1.4724), precision=1.0000, recall=0.7500, F1=0.8571
+             TP=9, FN=3, FP=0, TN=3
+  (1|14.0248), precision=1.0000, recall=0.7692, F1=0.8696
+             TP=10, FN=3, FP=0, TN=3
+  (1|0.1997), precision=1.0000, recall=0.7143, F1=0.8333
+             TP=10, FN=4, FP=0, TN=3
+  (1|404.9755), precision=1.0000, recall=0.7333, F1=0.8462
+             TP=11, FN=4, FP=0, TN=3
+  (1|0.3847), precision=1.0000, recall=0.6875, F1=0.8148
+             TP=11, FN=5, FP=0, TN=3
+  (0|0.0062), precision=1.0000, recall=0.6875, F1=0.8148
+             TP=11, FN=5, FP=0, TN=4
+  (1|100.1238), precision=1.0000, recall=0.7059, F1=0.8276
+             TP=12, FN=5, FP=0, TN=4
+  (0|128.8439), precision=0.9231, recall=0.7059, F1=0.8000
+             TP=12, FN=5, FP=1, TN=4
+  (1|0.0587), precision=0.9231, recall=0.6667, F1=0.7742
+             TP=12, FN=6, FP=1, TN=4
+  (1|229.1261), precision=0.9286, recall=0.6842, F1=0.7879
+             TP=13, FN=6, FP=1, TN=4
+  (1|3619.2226), precision=0.9333, recall=0.7000, F1=0.8000
+             TP=14, FN=6, FP=1, TN=4
+  (1|824.0099), precision=0.9375, recall=0.7143, F1=0.8108
+             TP=15, FN=6, FP=1, TN=4
+  (1|0.2271), precision=0.9375, recall=0.6818, F1=0.7895
+             TP=15, FN=7, FP=1, TN=4
+  (1|25.5715), precision=0.9412, recall=0.6957, F1=0.8000
+             TP=16, FN=7, FP=1, TN=4
+  (1|0.5484), precision=0.9412, recall=0.6667, F1=0.7805
+             TP=16, FN=8, FP=1, TN=4
+  (1|7.0485), precision=0.9444, recall=0.6800, F1=0.7907
+             TP=17, FN=8, FP=1, TN=4
+  (1|2.0648), precision=0.9474, recall=0.6923, F1=0.8000
+             TP=18, FN=8, FP=1, TN=4
+  (1|5.7839), precision=0.9500, recall=0.7037, F1=0.8085
+             TP=19, FN=8, FP=1, TN=4
+  (1|0.9607), precision=0.9500, recall=0.6786, F1=0.7917
+             TP=19, FN=9, FP=1, TN=4
+  (1|1.4122), precision=0.9524, recall=0.6897, F1=0.8000
+             TP=20, FN=9, FP=1, TN=4
+  (1|21.9573), precision=0.9545, recall=0.7000, F1=0.8077
+             TP=21, FN=9, FP=1, TN=4
+  (1|11415.3649), precision=0.9565, recall=0.7097, F1=0.8148
+             TP=22, FN=9, FP=1, TN=4
+  (1|0.0370), precision=0.9565, recall=0.6875, F1=0.8000
+             TP=22, FN=10, FP=1, TN=4
+  (1|13.9351), precision=0.9583, recall=0.6970, F1=0.8070
+             TP=23, FN=10, FP=1, TN=4
+  (1|52.5376), precision=0.9600, recall=0.7059, F1=0.8136
+             TP=24, FN=10, FP=1, TN=4
+  (1|2433.3691), precision=0.9615, recall=0.7143, F1=0.8197
+             TP=25, FN=10, FP=1, TN=4
+  (1|8.2300), precision=0.9630, recall=0.7222, F1=0.8254
+             TP=26, FN=10, FP=1, TN=4
+  (1|0.2113), precision=0.9630, recall=0.7027, F1=0.8125
+             TP=26, FN=11, FP=1, TN=4
+  (1|11.4986), precision=0.9643, recall=0.7105, F1=0.8182
+             TP=27, FN=11, FP=1, TN=4
+  (1|7.9937), precision=0.9655, recall=0.7179, F1=0.8235
+             TP=28, FN=11, FP=1, TN=4
+  (1|21.2509), precision=0.9667, recall=0.7250, F1=0.8286
+             TP=29, FN=11, FP=1, TN=4
+  (1|2.4938), precision=0.9677, recall=0.7317, F1=0.8333
+             TP=30, FN=11, FP=1, TN=4
+  (1|0.1619), precision=0.9677, recall=0.7143, F1=0.8219
+             TP=30, FN=12, FP=1, TN=4
+  (1|1.4511), precision=0.9688, recall=0.7209, F1=0.8267
+             TP=31, FN=12, FP=1, TN=4
+  (1|2.0673), precision=0.9697, recall=0.7273, F1=0.8312
+             TP=32, FN=12, FP=1, TN=4
+  (1|3.1294), precision=0.9706, recall=0.7333, F1=0.8354
+             TP=33, FN=12, FP=1, TN=4
+  (1|1.1180), precision=0.9714, recall=0.7391, F1=0.8395
+             TP=34, FN=12, FP=1, TN=4
+  (0|3.2371), precision=0.9444, recall=0.7391, F1=0.8293
+             TP=34, FN=12, FP=2, TN=4
+  (1|1.5833), precision=0.9459, recall=0.7447, F1=0.8333
+             TP=35, FN=12, FP=2, TN=4
+  (1|1.5650), precision=0.9474, recall=0.7500, F1=0.8372
+             TP=36, FN=12, FP=2, TN=4
+  (1|4.5731), precision=0.9487, recall=0.7551, F1=0.8409
+             TP=37, FN=12, FP=2, TN=4
+  (0|10.4007), precision=0.9250, recall=0.7551, F1=0.8315
+             TP=37, FN=12, FP=3, TN=4
+  (1|23.2059), precision=0.9268, recall=0.7600, F1=0.8352
+             TP=38, FN=12, FP=3, TN=4
+  (0|0.0291), precision=0.9268, recall=0.7600, F1=0.8352
+             TP=38, FN=12, FP=3, TN=5
+  (1|7.2321), precision=0.9286, recall=0.7647, F1=0.8387
+             TP=39, FN=12, FP=3, TN=5
+  (0|3.2874), precision=0.9070, recall=0.7647, F1=0.8298
+             TP=39, FN=12, FP=4, TN=5
+  (1|12445824570.8158), precision=0.9091, recall=0.7692, F1=0.8333
+             TP=40, FN=12, FP=4, TN=5
+  (1|2.4865), precision=0.9111, recall=0.7736, F1=0.8367
+             TP=41, FN=12, FP=4, TN=5
+  (1|0.1089), precision=0.9111, recall=0.7593, F1=0.8283
+             TP=41, FN=13, FP=4, TN=5
+  (0|4.5164), precision=0.8913, recall=0.7593, F1=0.8200
+             TP=41, FN=13, FP=5, TN=5
+  (0|6.7624), precision=0.8723, recall=0.7593, F1=0.8119
+             TP=41, FN=13, FP=6, TN=5
+  (1|6.2248), precision=0.8750, recall=0.7636, F1=0.8155
+             TP=42, FN=13, FP=6, TN=5
+  (0|0.0243), precision=0.8750, recall=0.7636, F1=0.8155
+             TP=42, FN=13, FP=6, TN=6
+  (0|0.2862), precision=0.8750, recall=0.7636, F1=0.8155
+             TP=42, FN=13, FP=6, TN=7
+  (0|0.2201), precision=0.8750, recall=0.7636, F1=0.8155
+             TP=42, FN=13, FP=6, TN=8
+  (1|2.9232), precision=0.8776, recall=0.7679, F1=0.8190
+             TP=43, FN=13, FP=6, TN=8
+  (1|1.9039), precision=0.8800, recall=0.7719, F1=0.8224
+             TP=44, FN=13, FP=6, TN=8
+  (1|1.2532), precision=0.8824, recall=0.7759, F1=0.8257
+             TP=45, FN=13, FP=6, TN=8
+  (1|1.6441), precision=0.8846, recall=0.7797, F1=0.8288
+             TP=46, FN=13, FP=6, TN=8
+  (0|3.0539), precision=0.8679, recall=0.7797, F1=0.8214
+             TP=46, FN=13, FP=7, TN=8
+  (1|nan), precision=0.8679, recall=0.7797, F1=0.8214
+             TP=46, FN=13, FP=7, TN=8
+  (1|0.0022), precision=0.8679, recall=0.7667, F1=0.8142
+             TP=46, FN=14, FP=7, TN=8
+  (1|0.1644), precision=0.8679, recall=0.7541, F1=0.8070
+             TP=46, FN=15, FP=7, TN=8
+  (1|3.8113), precision=0.8704, recall=0.7581, F1=0.8103
+             TP=47, FN=15, FP=7, TN=8
+  (1|1.2963), precision=0.8727, recall=0.7619, F1=0.8136
+             TP=48, FN=15, FP=7, TN=8
+  (1|0.0003), precision=0.8727, recall=0.7500, F1=0.8067
+             TP=48, FN=16, FP=7, TN=8
+  (0|0.6832), precision=0.8727, recall=0.7500, F1=0.8067
+             TP=48, FN=16, FP=7, TN=9
+  (0|636.2934), precision=0.8571, recall=0.7500, F1=0.8000
+             TP=48, FN=16, FP=8, TN=9
+  (0|0.0471), precision=0.8571, recall=0.7500, F1=0.8000
+             TP=48, FN=16, FP=8, TN=10
+  (0|10.0729), precision=0.8421, recall=0.7500, F1=0.7934
+             TP=48, FN=16, FP=9, TN=10
+  (0|0.0577), precision=0.8421, recall=0.7500, F1=0.7934
+  (0|1.2345), precision=0.7941, recall=0.8710, F1=0.8308
+             TP=54, FN=8, FP=14, TN=7
+  (0|0.4475), precision=0.7941, recall=0.8710, F1=0.8308
+             TP=54, FN=8, FP=14, TN=8
+  (0|0.5041), precision=0.7941, recall=0.8710, F1=0.8308
+             TP=54, FN=8, FP=14, TN=9
+  (0|0.1344), precision=0.7941, recall=0.8710, F1=0.8308
+             TP=54, FN=8, FP=14, TN=10
+  (0|3262.8317), precision=0.7826, recall=0.8710, F1=0.8244
+             TP=54, FN=8, FP=15, TN=10
+  (0|2.6553), precision=0.7714, recall=0.8710, F1=0.8182
+             TP=54, FN=8, FP=16, TN=10
+  (0|11.9018), precision=0.7606, recall=0.8710, F1=0.8120
+             TP=54, FN=8, FP=17, TN=10
+  (1|2.9075), precision=0.7639, recall=0.8730, F1=0.8148
+             TP=55, FN=8, FP=17, TN=10
+  (0|0.7982), precision=0.7639, recall=0.8730, F1=0.8148
+             TP=55, FN=8, FP=17, TN=11
+  (0|2.0607), precision=0.7534, recall=0.8730, F1=0.8088
+             TP=55, FN=8, FP=18, TN=11
+  (1|8.3410), precision=0.7568, recall=0.8750, F1=0.8116
+             TP=56, FN=8, FP=18, TN=11
+  (1|0.0123), precision=0.7568, recall=0.8615, F1=0.8058
+             TP=56, FN=9, FP=18, TN=11
+  (0|0.4402), precision=0.7568, recall=0.8615, F1=0.8058
+             TP=56, FN=9, FP=18, TN=12
+  (0|1.8835), precision=0.7467, recall=0.8615, F1=0.8000
+             TP=56, FN=9, FP=19, TN=12
+  (1|1.7642), precision=0.7500, recall=0.8636, F1=0.8028
+             TP=57, FN=9, FP=19, TN=12
+  (0|0.8903), precision=0.7500, recall=0.8636, F1=0.8028
+             TP=57, FN=9, FP=19, TN=13
+  (0|3.2253), precision=0.7403, recall=0.8636, F1=0.7972
+             TP=57, FN=9, FP=20, TN=13
+  (0|0.7465), precision=0.7403, recall=0.8636, F1=0.7972
+             TP=57, FN=9, FP=20, TN=14
+  (1|5.1398), precision=0.7436, recall=0.8657, F1=0.8000
+             TP=58, FN=9, FP=20, TN=14
+  (0|2.7787), precision=0.7342, recall=0.8657, F1=0.7945
+             TP=58, FN=9, FP=21, TN=14
+  (0|1.9245), precision=0.7250, recall=0.8657, F1=0.7891
+             TP=58, FN=9, FP=22, TN=14
+  (0|0.4958), precision=0.7250, recall=0.8657, F1=0.7891
+             TP=58, FN=9, FP=22, TN=15
+  (0|1.5918), precision=0.7160, recall=0.8657, F1=0.7838
+             TP=58, FN=9, FP=23, TN=15
+  (0|0.5364), precision=0.7160, recall=0.8657, F1=0.7838
+             TP=58, FN=9, FP=23, TN=16
+  (1|1.2586), precision=0.7195, recall=0.8676, F1=0.7867
+             TP=59, FN=9, FP=23, TN=16
+  (0|0.4970), precision=0.7195, recall=0.8676, F1=0.7867
+             TP=59, FN=9, FP=23, TN=17
+  (0|9.2925), precision=0.7108, recall=0.8676, F1=0.7815
+             TP=59, FN=9, FP=24, TN=17
+  (0|0.6600), precision=0.7108, recall=0.8676, F1=0.7815
+             TP=59, FN=9, FP=24, TN=18
+  (1|2.0964), precision=0.7143, recall=0.8696, F1=0.7843
+             TP=60, FN=9, FP=24, TN=18
+  (1|0.4517), precision=0.7143, recall=0.8571, F1=0.7792
+             TP=60, FN=10, FP=24, TN=18
+  (0|1.5264), precision=0.7059, recall=0.8571, F1=0.7742
+             TP=60, FN=10, FP=25, TN=18
+  (0|4.1707), precision=0.6977, recall=0.8571, F1=0.7692
+             TP=60, FN=10, FP=26, TN=18
+  (0|0.9455), precision=0.6977, recall=0.8571, F1=0.7692
+             TP=60, FN=10, FP=26, TN=19
+  (1|1.8860), precision=0.7011, recall=0.8592, F1=0.7722
+             TP=61, FN=10, FP=26, TN=19
+  (1|5.5834), precision=0.7045, recall=0.8611, F1=0.7750
+             TP=62, FN=10, FP=26, TN=19
+  (1|0.5811), precision=0.7045, recall=0.8493, F1=0.7702
+             TP=62, FN=11, FP=26, TN=19
+  (0|11.8526), precision=0.6966, recall=0.8493, F1=0.7654
+             TP=62, FN=11, FP=27, TN=19
+  (0|2.1495), precision=0.6889, recall=0.8493, F1=0.7607
+             TP=62, FN=11, FP=28, TN=19
+  (0|0.3205), precision=0.6889, recall=0.8493, F1=0.7607
+             TP=62, FN=11, FP=28, TN=20
+  (0|1.6154), precision=0.6813, recall=0.8493, F1=0.7561
+             TP=62, FN=11, FP=29, TN=20
+  (0|2.4016), precision=0.6739, recall=0.8493, F1=0.7515
+             TP=62, FN=11, FP=30, TN=20
+  (1|2.7770), precision=0.6774, recall=0.8514, F1=0.7545
+             TP=63, FN=11, FP=30, TN=20
+  (1|0.4970), precision=0.6774, recall=0.8400, F1=0.7500
+             TP=63, FN=12, FP=30, TN=20
+  (1|4.4128), precision=0.6809, recall=0.8421, F1=0.7529
+             TP=64, FN=12, FP=30, TN=20
+  (1|5.8963), precision=0.6842, recall=0.8442, F1=0.7558
+             TP=65, FN=12, FP=30, TN=20
+  (1|1.2901), precision=0.6875, recall=0.8462, F1=0.7586
+             TP=66, FN=12, FP=30, TN=20
+  (0|2.9941), precision=0.6804, recall=0.8462, F1=0.7543
+             TP=66, FN=12, FP=31, TN=20
+  (0|1.9237), precision=0.6735, recall=0.8462, F1=0.7500
+             TP=66, FN=12, FP=32, TN=20
+  (0|65.8199), precision=0.6667, recall=0.8462, F1=0.7458
+             TP=66, FN=12, FP=33, TN=20
+  (1|9.4890), precision=0.6700, recall=0.8481, F1=0.7486
+             TP=67, FN=12, FP=33, TN=20
+  (1|0.4053), precision=0.6700, recall=0.8375, F1=0.7444
+             TP=67, FN=13, FP=33, TN=20
+  (0|0.2339), precision=0.6700, recall=0.8375, F1=0.7444
+             TP=67, FN=13, FP=33, TN=21
+  (0|15.0188), precision=0.6634, recall=0.8375, F1=0.7403
+             TP=67, FN=13, FP=34, TN=21
+  (1|3.0705), precision=0.6667, recall=0.8395, F1=0.7432
+             TP=68, FN=13, FP=34, TN=21
+  (0|5.0713), precision=0.6602, recall=0.8395, F1=0.7391
+             TP=68, FN=13, FP=35, TN=21
+  (0|2.6740), precision=0.6538, recall=0.8395, F1=0.7351
+             TP=68, FN=13, FP=36, TN=21
+  (1|0.0133), precision=0.6538, recall=0.8293, F1=0.7312
+             TP=68, FN=14, FP=36, TN=21
+  (0|1.9968), precision=0.6476, recall=0.8293, F1=0.7273
+             TP=68, FN=14, FP=37, TN=21
+  (1|0.1469), precision=0.6476, recall=0.8193, F1=0.7234
+             TP=68, FN=15, FP=37, TN=21
+  (1|0.2171), precision=0.6476, recall=0.8095, F1=0.7196
+             TP=68, FN=16, FP=37, TN=21
+  (1|0.1408), precision=0.6476, recall=0.8000, F1=0.7158
+             TP=68, FN=17, FP=37, TN=21
+  (1|1.1690), precision=0.6509, recall=0.8023, F1=0.7188
+             TP=69, FN=17, FP=37, TN=21
+  (1|6.4715), precision=0.6542, recall=0.8046, F1=0.7216
+             TP=70, FN=17, FP=37, TN=21
+  (0|5.3183), precision=0.6481, recall=0.8046, F1=0.7179
+             TP=70, FN=17, FP=38, TN=21
+  (1|1.6749), precision=0.6514, recall=0.8068, F1=0.7208
+             TP=71, FN=17, FP=38, TN=21
+  (1|1.7010), precision=0.6545, recall=0.8090, F1=0.7236
+             TP=72, FN=17, FP=38, TN=21
+  (1|1.0239), precision=0.6577, recall=0.8111, F1=0.7264
+             TP=73, FN=17, FP=38, TN=21
+  (1|4.8603), precision=0.6607, recall=0.8132, F1=0.7291
+             TP=74, FN=17, FP=38, TN=21
+  (1|2.8640), precision=0.6637, recall=0.8152, F1=0.7317
+             TP=75, FN=17, FP=38, TN=21
+  (1|6.7823), precision=0.6667, recall=0.8172, F1=0.7343
+             TP=76, FN=17, FP=38, TN=21
+  (0|0.0066), precision=0.6667, recall=0.8172, F1=0.7343
+             TP=76, FN=17, FP=38, TN=22
+  (1|4.3022), precision=0.6696, recall=0.8191, F1=0.7368
+             TP=77, FN=17, FP=38, TN=22
+  (0|0.9119), precision=0.6696, recall=0.8191, F1=0.7368
+             TP=77, FN=17, FP=38, TN=23
+  (1|2.0402), precision=0.6724, recall=0.8211, F1=0.7393
+             TP=78, FN=17, FP=38, TN=23
+  (1|0.5451), precision=0.6724, recall=0.8125, F1=0.7358
+             TP=78, FN=18, FP=38, TN=23
+  (1|0.9818), precision=0.6724, recall=0.8041, F1=0.7324
+             TP=78, FN=19, FP=38, TN=23
+  (0|0.3311), precision=0.6724, recall=0.8041, F1=0.7324
+             TP=78, FN=19, FP=38, TN=24
+  (1|2.6552), precision=0.6752, recall=0.8061, F1=0.7349
+             TP=79, FN=19, FP=38, TN=24
+  (1|3.0747), precision=0.6780, recall=0.8081, F1=0.7373
+             TP=80, FN=19, FP=38, TN=24
+  (0|0.6558), precision=0.6780, recall=0.8081, F1=0.7373
+             TP=80, FN=19, FP=38, TN=25
+  (1|0.6930), precision=0.6780, recall=0.8000, F1=0.7339
+             TP=80, FN=20, FP=38, TN=25
+  (0|5.6876), precision=0.6723, recall=0.8000, F1=0.7306
+             TP=80, FN=20, FP=39, TN=25
+  (1|0.3219), precision=0.6723, recall=0.7921, F1=0.7273
+             TP=80, FN=21, FP=39, TN=25
+  (1|6.8213), precision=0.6750, recall=0.7941, F1=0.7297
+             TP=81, FN=21, FP=39, TN=25
+  (1|2.0185), precision=0.6777, recall=0.7961, F1=0.7321
+             TP=82, FN=21, FP=39, TN=25
+             TP=48, FN=16, FP=9, TN=11
+  (0|4.9394), precision=0.8276, recall=0.7500, F1=0.7869
+             TP=48, FN=16, FP=10, TN=11
+  (0|0.6134), precision=0.8276, recall=0.7500, F1=0.7869
+             TP=48, FN=16, FP=10, TN=12
+  (0|1.6245), precision=0.8136, recall=0.7500, F1=0.7805
+             TP=48, FN=16, FP=11, TN=12
+  (0|3.0143), precision=0.8000, recall=0.7500, F1=0.7742
+             TP=48, FN=16, FP=12, TN=12
+  (0|0.0000), precision=0.8000, recall=0.7500, F1=0.7742
+             TP=48, FN=16, FP=12, TN=13
+  (0|1.9079), precision=0.7869, recall=0.7500, F1=0.7680
+             TP=48, FN=16, FP=13, TN=13
+  (0|0.7728), precision=0.7869, recall=0.7500, F1=0.7680
+             TP=48, FN=16, FP=13, TN=14
+  (1|2.4158), precision=0.7903, recall=0.7538, F1=0.7717
+             TP=49, FN=16, FP=13, TN=14
+  (0|0.8441), precision=0.7903, recall=0.7538, F1=0.7717
+             TP=49, FN=16, FP=13, TN=15
+  (0|0.7778), precision=0.7903, recall=0.7538, F1=0.7717
+             TP=49, FN=16, FP=13, TN=16
+  (1|177.9047), precision=0.7937, recall=0.7576, F1=0.7752
+             TP=50, FN=16, FP=13, TN=16
+  (1|1.6465), precision=0.7969, recall=0.7612, F1=0.7786
+             TP=51, FN=16, FP=13, TN=16
+  (0|2.9960), precision=0.7846, recall=0.7612, F1=0.7727
+             TP=51, FN=16, FP=14, TN=16
+  (0|4.6792), precision=0.7727, recall=0.7612, F1=0.7669
+             TP=51, FN=16, FP=15, TN=16
+  (1|0.4003), precision=0.7727, recall=0.7500, F1=0.7612
+             TP=51, FN=17, FP=15, TN=16
+  (0|1.1231), precision=0.7612, recall=0.7500, F1=0.7556
+             TP=51, FN=17, FP=16, TN=16
+  (0|2.3857), precision=0.7500, recall=0.7500, F1=0.7500
+             TP=51, FN=17, FP=17, TN=16
+  (0|4.3371), precision=0.7391, recall=0.7500, F1=0.7445
+             TP=51, FN=17, FP=18, TN=16
+  (1|0.5634), precision=0.7391, recall=0.7391, F1=0.7391
+             TP=51, FN=18, FP=18, TN=16
+  (0|18.1473), precision=0.7286, recall=0.7391, F1=0.7338
+             TP=51, FN=18, FP=19, TN=16
+  (0|5.0917), precision=0.7183, recall=0.7391, F1=0.7286
+             TP=51, FN=18, FP=20, TN=16
+  (0|3.5760), precision=0.7083, recall=0.7391, F1=0.7234
+             TP=51, FN=18, FP=21, TN=16
+  (0|6.5483), precision=0.6986, recall=0.7391, F1=0.7183
+             TP=51, FN=18, FP=22, TN=16
+  (0|2.0755), precision=0.6892, recall=0.7391, F1=0.7133
+             TP=51, FN=18, FP=23, TN=16
+  (1|0.5152), precision=0.6892, recall=0.7286, F1=0.7083
+             TP=51, FN=19, FP=23, TN=16
+  (0|0.9863), precision=0.6892, recall=0.7286, F1=0.7083
+             TP=51, FN=19, FP=23, TN=17
+  (0|0.4278), precision=0.6892, recall=0.7286, F1=0.7083
+             TP=51, FN=19, FP=23, TN=18
+  (0|1.4405), precision=0.6800, recall=0.7286, F1=0.7034
+             TP=51, FN=19, FP=24, TN=18
+  (1|0.7400), precision=0.6800, recall=0.7183, F1=0.6986
+             TP=51, FN=20, FP=24, TN=18
+  (1|1.7224), precision=0.6842, recall=0.7222, F1=0.7027
+             TP=52, FN=20, FP=24, TN=18
+  (0|0.4588), precision=0.6842, recall=0.7222, F1=0.7027
+             TP=52, FN=20, FP=24, TN=19
+  (0|4.7418), precision=0.6753, recall=0.7222, F1=0.6980
+             TP=52, FN=20, FP=25, TN=19
+  (0|2.0233), precision=0.6667, recall=0.7222, F1=0.6933
+             TP=52, FN=20, FP=26, TN=19
+  (1|2.2429), precision=0.6709, recall=0.7260, F1=0.6974
+             TP=53, FN=20, FP=26, TN=19
+  (1|3.7661), precision=0.6750, recall=0.7297, F1=0.7013
+             TP=54, FN=20, FP=26, TN=19
+  (1|0.8032), precision=0.6750, recall=0.7200, F1=0.6968
+             TP=54, FN=21, FP=26, TN=19
+  (0|4.5378), precision=0.6667, recall=0.7200, F1=0.6923
+             TP=54, FN=21, FP=27, TN=19
+  (0|5.1577), precision=0.6585, recall=0.7200, F1=0.6879
+             TP=54, FN=21, FP=28, TN=19
+  (0|0.4951), precision=0.6585, recall=0.7200, F1=0.6879
+             TP=54, FN=21, FP=28, TN=20
+  (0|0.6261), precision=0.6585, recall=0.7200, F1=0.6879
+             TP=54, FN=21, FP=28, TN=21
+  (0|3.6873), precision=0.6506, recall=0.7200, F1=0.6835
+             TP=54, FN=21, FP=29, TN=21
+  (1|2.6296), precision=0.6548, recall=0.7237, F1=0.6875
+             TP=55, FN=21, FP=29, TN=21
+  (1|0.5958), precision=0.6548, recall=0.7143, F1=0.6832
+             TP=55, FN=22, FP=29, TN=21
+  (1|3.7094), precision=0.6588, recall=0.7179, F1=0.6871
+             TP=56, FN=22, FP=29, TN=21
+  (1|2.7077), precision=0.6628, recall=0.7215, F1=0.6909
+             TP=57, FN=22, FP=29, TN=21
+  (1|2.2735), precision=0.6667, recall=0.7250, F1=0.6946
+             TP=58, FN=22, FP=29, TN=21
+  (0|51.6899), precision=0.6591, recall=0.7250, F1=0.6905
+             TP=58, FN=22, FP=30, TN=21
+  (0|0.0289), precision=0.6591, recall=0.7250, F1=0.6905
+             TP=58, FN=22, FP=30, TN=22
+  (0|36.2583), precision=0.6517, recall=0.7250, F1=0.6864
+             TP=58, FN=22, FP=31, TN=22
+  (1|3.2736), precision=0.6556, recall=0.7284, F1=0.6901
+             TP=59, FN=22, FP=31, TN=22
+  (1|11.6700), precision=0.6593, recall=0.7317, F1=0.6936
+             TP=60, FN=22, FP=31, TN=22
+  (0|0.3617), precision=0.6593, recall=0.7317, F1=0.6936
+             TP=60, FN=22, FP=31, TN=23
+  (0|4.5613), precision=0.6522, recall=0.7317, F1=0.6897
+             TP=60, FN=22, FP=32, TN=23
+  (1|2.6537), precision=0.6559, recall=0.7349, F1=0.6932
+             TP=61, FN=22, FP=32, TN=23
+  (0|0.1979), precision=0.6559, recall=0.7349, F1=0.6932
+             TP=61, FN=22, FP=32, TN=24
+  (0|3.8839), precision=0.6489, recall=0.7349, F1=0.6893
+             TP=61, FN=22, FP=33, TN=24
+  (1|274653.1296), precision=0.6526, recall=0.7381, F1=0.6927
+             TP=62, FN=22, FP=33, TN=24
+  (0|2.2255), precision=0.6458, recall=0.7381, F1=0.6889
+             TP=62, FN=22, FP=34, TN=24
+  (1|21.9169), precision=0.6495, recall=0.7412, F1=0.6923
+             TP=63, FN=22, FP=34, TN=24
+  (1|45.1807), precision=0.6531, recall=0.7442, F1=0.6957
+             TP=64, FN=22, FP=34, TN=24
+  (1|166.0574), precision=0.6566, recall=0.7471, F1=0.6989
+             TP=65, FN=22, FP=34, TN=24
+  (1|3.3877), precision=0.6600, recall=0.7500, F1=0.7021
+             TP=66, FN=22, FP=34, TN=24
+  (1|7.5448), precision=0.6634, recall=0.7528, F1=0.7053
+             TP=67, FN=22, FP=34, TN=24
+  (0|0.0139), precision=0.6634, recall=0.7528, F1=0.7053
+             TP=67, FN=22, FP=34, TN=25
+  (1|276.8846), precision=0.6667, recall=0.7556, F1=0.7083
+             TP=68, FN=22, FP=34, TN=25
+  (1|23.1480), precision=0.6699, recall=0.7582, F1=0.7113
+             TP=69, FN=22, FP=34, TN=25
+  (1|4.4722), precision=0.6731, recall=0.7609, F1=0.7143
+             TP=70, FN=22, FP=34, TN=25
+  (1|0.0940), precision=0.6731, recall=0.7527, F1=0.7107
+             TP=70, FN=23, FP=34, TN=25
+  (1|215.1863), precision=0.6762, recall=0.7553, F1=0.7136
+             TP=71, FN=23, FP=34, TN=25
+  (1|6.1513), precision=0.6792, recall=0.7579, F1=0.7164
+             TP=72, FN=23, FP=34, TN=25
+  (0|470049.6604), precision=0.6729, recall=0.7579, F1=0.7129
+             TP=72, FN=23, FP=35, TN=25
+  (1|7.6510), precision=0.6759, recall=0.7604, F1=0.7157
+             TP=73, FN=23, FP=35, TN=25
+  (0|2.0455), precision=0.6697, recall=0.7604, F1=0.7122
+             TP=73, FN=23, FP=36, TN=25
+  (1|220.8820), precision=0.6727, recall=0.7629, F1=0.7150
+             TP=74, FN=23, FP=36, TN=25
+  (1|0.9735), precision=0.6727, recall=0.7551, F1=0.7115
+             TP=74, FN=24, FP=36, TN=25
+  (1|2.7437), precision=0.6757, recall=0.7576, F1=0.7143
+             TP=75, FN=24, FP=36, TN=25
+  (0|4.5612), precision=0.6696, recall=0.7576, F1=0.7109
+             TP=75, FN=24, FP=37, TN=25
+  (1|1.7687), precision=0.6726, recall=0.7600, F1=0.7136
+             TP=76, FN=24, FP=37, TN=25
+  (1|13.9356), precision=0.6754, recall=0.7624, F1=0.7163
+             TP=77, FN=24, FP=37, TN=25
+  (0|4552.6552), precision=0.6696, recall=0.7624, F1=0.7130
+             TP=77, FN=24, FP=38, TN=25
+  (1|14.2919), precision=0.6724, recall=0.7647, F1=0.7156
+             TP=78, FN=24, FP=38, TN=25
+  (0|2.0687), precision=0.6667, recall=0.7647, F1=0.7123
+             TP=78, FN=24, FP=39, TN=25
+  (1|8643.3237), precision=0.6695, recall=0.7670, F1=0.7149
+             TP=79, FN=24, FP=39, TN=25
+  (1|0.0543), precision=0.6695, recall=0.7596, F1=0.7117
+             TP=79, FN=25, FP=39, TN=25
