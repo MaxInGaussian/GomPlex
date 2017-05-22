@@ -14,8 +14,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from bisect import bisect_left
 
-from sklearn.metrics import roc_auc_score
-
 from GomPlex import *
 
 class FeatureLearner(object):
@@ -23,8 +21,8 @@ class FeatureLearner(object):
     df_drawing_data, complex_regressor = None, None
     CENTIMETER_TO_PIXELS = 62.992126
     
-    def __init__(self, moca_cutoff=20, forecast_step=0.02, sample_time=100,
-        use_past=5, use_gender=True, use_age=True, use_edu_level=True,
+    def __init__(self, moca_cutoff=20, sample_time=100, use_past=10,
+        use_gender=True, use_age=True, use_edu_level=True,
         stroke_size_tol=10, stroke_length_tol=1, centimeter=True, metric='nmse',
         show_training_drawings=False, show_predicted_drawings=False):
         self.moca_cutoff = moca_cutoff
@@ -36,7 +34,7 @@ class FeatureLearner(object):
         self.stroke_size_tol = stroke_size_tol
         self.stroke_length_tol = stroke_length_tol
         self.use_past = use_past
-        self.forecast_step = forecast_step
+        self.forecast_step = 1/sample_time
         self.metric = Metric(metric)
         self.show_training_drawings = show_training_drawings
         self.show_predicted_drawings = show_predicted_drawings
@@ -46,7 +44,7 @@ class FeatureLearner(object):
         return self
     
     def get_regressor_path(self, reg_meth='GomPlex'):
-        model_path = reg_meth+"_f%.3f_p%d_"%(self.forecast_step, self.use_past)
+        model_path = reg_meth+"_s%d_p%d_"%(self.sample_time, self.use_past)
         if(self.use_gender):
             model_path += "g"
         if(self.use_age):
@@ -66,16 +64,15 @@ class FeatureLearner(object):
         X_feat, cis, ci_probs = [], [], []
         cfs_mat = np.zeros((2, 2))
         for subject in subjects:
-            ci, ci_prob = self.learn_features_for_subject(subject, reg_meth)
+            ci, prob_ratio = self.learn_features_for_subject(subject, reg_meth)
             cis.append(ci); ci_probs.append(ci_prob)
-            feat_mu = np.exp(np.mean(np.log(ci_prob)))
-            if(feat_mu > 0.5 and ci == 1):
+            if(prob_ratio > 1 and ci == 1):
                 cfs_mat[0, 0] += 1
-            elif(feat_mu > 0.5 and ci == 0):
+            elif(prob_ratio > 1 and ci == 0):
                 cfs_mat[0, 1] += 1
-            elif(feat_mu < 0.5 and ci == 1):
+            elif(prob_ratio < 1 and ci == 1):
                 cfs_mat[1, 0] += 1
-            elif(feat_mu < 0.5 and ci == 0):
+            elif(prob_ratio < 1 and ci == 0):
                 cfs_mat[1, 1] += 1
             accuracy = (cfs_mat[0, 0]+cfs_mat[1, 1])/np.sum(cfs_mat)
             precision = 0 if np.sum(cfs_mat[:, 0]) == 0 else\
@@ -89,15 +86,14 @@ class FeatureLearner(object):
                 specificity, precision, recall, F1))
             X_feat.append(ci_prob)
         print('*'*80)
-        AUC = roc_auc_score(cis, ci_probs)
-        print('  recall=%.4f, F1=%.4f, AUC=%.4f'%(recall, F1, AUC))
+        print('  recall=%.4f, F1=%.4f'%(recall, F1))
         path = 'save_models/'+self.get_regressor_path()[:-4]
         path += '_%s_'%(self.complex_regressor.hashed_name)
-        if(recall > 0.9 or F1 > 0.8 or AUC > 0.8):
+        if(recall > 0.8 or F1 > 0.8):
             path += '%d_%d_%d_%d.pkl'%(
                 cfs_mat[0, 0],cfs_mat[0, 1], cfs_mat[1, 0], cfs_mat[1, 1])
             self.complex_regressor.save(path)
-        return accuracy, precision, recall, F1, AUC, np.array(X_feat)
+        return accuracy, precision, recall, F1, np.array(X_feat)
     
     def learn_features_for_subject(self, subject, reg_meth='GomPlex'):
         if(self.complex_regressor is None):
@@ -109,15 +105,13 @@ class FeatureLearner(object):
         X, y = self.get_input_output_matrix_by_subject(subject)
         X_ci, X_nonci = X.copy(), X.copy()
         X_ci[:, 0], X_nonci[:, 0] = 1, 0
-        y_ci = self.complex_regressor.predict(X_ci)[0]
-        y_nonci = self.complex_regressor.predict(X_nonci)[0]
-        if(self.show_predicted_drawings):
-            self.show_predicted_drawing(X, y, y_ci, y_nonci)
-            plt.show()
-        y_ci_sim = np.absolute(y_nonci.ravel()-y.ravel())
-        y_nonci_sim = np.absolute(y_ci.ravel()-y.ravel())
-        ci_prob = np.exp(y_ci_sim)/(np.exp(y_ci_sim)+np.exp(y_nonci_sim))
-        return X[0, 0], ci_prob
+        mu_ci, std_ci = self.complex_regressor.predict(X_ci)
+        mu_nonci, std_nonci = self.complex_regressor.predict(X_nonci)
+        ci_p = (self.df_drawing_data['MoCA Total'] < self.moca_cutoff).count()
+        ci_p /= self.df_drawing_data['MoCA Total'].count()
+        log_p_ci = np.log(ci_p)-np.sum(((mu_ci-y)/std_ci)**2)
+        log_p_nonci = np.log(1-ci_p)-np.sum(((mu_nonci-y)/std_nonci)**2)
+        return X[0, 0], log_p_ci/log_p_nonci
     
     def show_predicted_drawing(self, X, y, y_ci, y_nonci):
         fig = plt.figure()
@@ -241,7 +235,7 @@ class FeatureLearner(object):
         d_cT = np.cumsum(d_T)
         rand_bound = d_cT[-1]*(1-self.forecast_step)
         rand_bound_max = bisect_left(d_cT, rand_bound)
-        rand_bound = d_cT[-1]*self.use_past*self.forecast_step/2
+        rand_bound = d_cT[-1]*self.use_past*self.forecast_step
         rand_bound_min = max(self.use_past, bisect_left(d_cT, rand_bound))
         if(rand_bound_min>=rand_bound_max):
             print(d_cT)
@@ -249,15 +243,15 @@ class FeatureLearner(object):
         input, target = [], []
         while(len(input) < self.sample_time):
             d_ci = npr.choice(rand_range)
-            x, y, v, di = d_X[d_ci], d_Y[d_ci], d_V[d_ci], d_DI[d_ci]
+            v, di = d_V[d_ci], d_DI[d_ci]
             lp, tp = d_cL[d_ci]/d_cL[-1], d_cT[d_ci]/d_cT[-1]
             cur_info = []
             V, DI = [v], [di]
             I = [d_ci]
-            for d_p in range(self.use_past):
-                d_ptp = tp-(d_p+1)*self.forecast_step/2
+            for d_p in range(self.use_past+1):
+                d_ptp = tp-(d_p+1)*self.forecast_step
                 d_pi = max(0, bisect_left(d_cT, d_cT[-1]*d_ptp)-1)
-                cur_info.extend([d_X[I[-1]], d_Y[I[-1]],
+                cur_info.extend([
                     np.mean(d_V[d_pi:d_ci]), np.mean(d_DI[d_pi:d_ci])])
                 I.append(d_pi)
             if(np.any(np.isnan(cur_info))):
@@ -270,7 +264,7 @@ class FeatureLearner(object):
             if(self.show_training_drawings):
                 print(I)
             input.append(cur_info)
-            target.append([d_X[d_fi]+1j*(d_Y[d_fi])])
+            target.append([d_V[d_fi]+1j*(d_DI[d_fi])])
         return np.array(input), np.array(target)
     
     def get_drawing_features_by_XYWT(self, drawing):
