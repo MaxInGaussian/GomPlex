@@ -255,10 +255,12 @@ class FeatureLearner(object):
             for d_p in range(self.use_past+1):
                 d_ptp = tp-(d_p+1)*self.forecast_step
                 d_pi = max(0, bisect_left(d_cT, d_cT[-1]*d_ptp)-1)
-                cur_info.extend([np.mean(d_V[d_pi:I[-1]]), np.mean(d_DI[d_pi:I[-1]])])
+                cur_info.extend([
+                    d_V[d_pi] if d_pi==I[-1] else np.mean(d_V[d_pi:I[-1]]),
+                    d_DI[d_pi] if d_pi==I[-1] else np.mean(d_DI[d_pi:I[-1]])])
                 I.append(d_pi)
             if(np.any(np.isnan(cur_info))):
-                continue
+                print(I)
             d_ftp = tp+self.forecast_step
             d_fi = bisect_left(d_cT, d_cT[-1]*d_ftp)
             I.append(d_fi)
