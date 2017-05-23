@@ -13,6 +13,7 @@ import os, fnmatch
 import pandas as pd
 import matplotlib.pyplot as plt
 from bisect import bisect_left
+from sklearn import linear_model
 
 from GomPlex import *
 
@@ -34,7 +35,7 @@ class FeatureLearner(object):
         self.stroke_size_tol = stroke_size_tol
         self.stroke_length_tol = stroke_length_tol
         self.use_past = use_past
-        self.forecast_step = 1/sample_time
+        self.forecast_step = 1/sample_time/5
         self.metric = Metric(metric)
         self.show_training_drawings = show_training_drawings
         self.show_predicted_drawings = show_predicted_drawings
@@ -62,8 +63,16 @@ class FeatureLearner(object):
         self.load_regression(reg_meth)
         subjects = self.df_drawing_data.index
         cfs_mat = np.zeros((2, 2))
+        X, y = [], []
         for subject in subjects:
-            ci, pred_ci = self.learn_features_for_subject(subject, reg_meth)
+            ci, mu_ci, mu_nonci = self.learn_features_for_subject(subject, reg_meth)
+            X.append((mu_ci/mu_nonci).ravel().tolist())
+            y.append(ci)
+        for i in range(len(X)):
+            logistic = linear_model.LogisticRegression()
+            logistic.fit(X[:i]+X[i+1:], y[:i]+y[i+1:])
+            pred_ci = logistic.predict(np.atleast_2d(X[i]))[0]
+            ci = y[i]
             if(pred_ci == 1 and ci == 1):
                 cfs_mat[0, 0] += 1
             elif(pred_ci == 0 and ci == 1):
@@ -81,7 +90,7 @@ class FeatureLearner(object):
                 cfs_mat[1, 1]/np.sum(cfs_mat[1])
             F1 = 0 if precision+recall == 0 else\
                 2*(precision*recall)/(precision+recall)
-            print('  (%d|%.4f), precision=%.4f, recall=%.4f, F1=%.4f'%(
+            print('  (%d|%d), precision=%.4f, recall=%.4f, F1=%.4f'%(
                 ci, pred_ci, precision, recall, F1))
             print('             TP=%d, FN=%d, FP=%d, TN=%d'%(
                 cfs_mat[0, 0],cfs_mat[0, 1], cfs_mat[1, 0], cfs_mat[1, 1]))
@@ -96,19 +105,17 @@ class FeatureLearner(object):
     def learn_features_for_subject(self, subject, reg_meth='GomPlex'):
         if(self.complex_regressor is None):
             self.load_regression(reg_meth)
-        subjects = self.df_drawing_data.index
-        subjects = list(set(subjects).difference([subject]))
-        X_train, y_train = self.get_input_output_matrix_by_subjects(subjects)
-        self.complex_regressor.fit(X_train, y_train)
+        # subjects = self.df_drawing_data.index
+        # subjects = list(set(subjects).difference([subject]))
+        # X_train, y_train = self.get_input_output_matrix_by_subjects(subjects)
+        # self.complex_regressor.fit(X_train, y_train)
         X, y = self.get_input_output_matrix_by_subject(subject)
         X_ci, X_nonci = X.copy(), X.copy()
         X_ci[:, 0], X_nonci[:, 0] = 1, 0
         mu_ci, std_ci = self.complex_regressor.predict(X_ci)
         mu_nonci, std_nonci = self.complex_regressor.predict(X_nonci)
         ci_p = (self.df_drawing_data['MoCA Total'] < self.moca_cutoff).mean()
-        log_p_ci = np.log(ci_p)-np.sum(np.absolute((mu_ci-y)/std_ci)**2)
-        log_p_nonci = np.log(1-ci_p)-np.sum(np.absolute(((mu_nonci-y)/std_nonci)**2))
-        return X[0, 0], int(np.exp(log_p_ci)>np.exp(log_p_nonci))
+        return X[0, 0], np.absolute(mu_ci-y)**2, np.absolute(mu_nonci-y)**2
     
     def show_predicted_drawing(self, X, y, y_ci, y_nonci):
         fig = plt.figure()
@@ -248,11 +255,10 @@ class FeatureLearner(object):
             for d_p in range(self.use_past+1):
                 d_ptp = tp-(d_p+1)*self.forecast_step
                 d_pi = max(0, bisect_left(d_cT, d_cT[-1]*d_ptp)-1)
-                cur_info.extend([
-                    np.mean(d_V[d_pi:d_ci]), np.mean(d_DI[d_pi:d_ci])])
+                cur_info.extend([np.mean(d_V[d_pi:I[-1]]), np.mean(d_DI[d_pi:I[-1]])])
                 I.append(d_pi)
             if(np.any(np.isnan(cur_info))):
-                print(I)
+                continue
             d_ftp = tp+self.forecast_step
             d_fi = bisect_left(d_cT, d_cT[-1]*d_ftp)
             I.append(d_fi)

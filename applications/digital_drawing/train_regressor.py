@@ -10,7 +10,7 @@ from FeatureLearner import FeatureLearner
 DRAWING_RAW_DATA_PATH = 'drawing_raw_data.csv'
 
 def nonstop_train():
-    model = FeatureLearner(sample_time=200, use_past=10,
+    model = FeatureLearner(sample_time=30, use_past=5,
         use_gender=True, use_age=True, use_edu_level=True,
         show_training_drawings=False, show_predicted_drawings=False)
     model.load_drawing_data(DRAWING_RAW_DATA_PATH)
