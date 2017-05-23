@@ -132,7 +132,7 @@ class FeatureLearner(object):
         ax.set_xlim([-1, 15])
         ax.set_ylim([-1, 9])
     
-    def train_regressor(self, reg_meth='GomPlex', ratio=0.3,
+    def train_regressor(self, reg_meth='GomPlex', iter_tol=30, ratio=0.3,
         cv_folds=3, plot_error=False):
         if(reg_meth == 'GomPlex'):
             # Default Regression Method - GomPlex
@@ -143,7 +143,8 @@ class FeatureLearner(object):
             print('  Done.')
             print('# Training GomPlex')
             gp = GomPlex(npr.randint(int(np.log(X_train.shape[0]))*2)+8, True)
-            gp.fit(X_train, y_train, cv_folds=cv_folds, plot=plot_error)
+            gp.fit(X_train, y_train, iter_tol=iter_tol,
+                cv_folds=cv_folds, plot=plot_error)
             print('  Done.')
             print('# Choosing GomPlex Models')
             new_score = self.metric.eval(y_test, *gp.predict(X_test))

@@ -15,6 +15,6 @@ def nonstop_train():
         show_training_drawings=False, show_predicted_drawings=False)
     model.load_drawing_data(DRAWING_RAW_DATA_PATH)
     while(True):
-        model.train_regressor(ratio=0.3, cv_folds=3, plot_error=False)
+        model.train_regressor(iter_tol=60, ratio=0.3, cv_folds=3)
 
 nonstop_train()
