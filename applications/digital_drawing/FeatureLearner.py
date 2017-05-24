@@ -97,7 +97,7 @@ class FeatureLearner(object):
                 cfs_mat[0, 0],cfs_mat[0, 1], cfs_mat[1, 0], cfs_mat[1, 1]))
         path = 'save_models/'+self.get_regressor_path()[:-4]
         path += '_%s_'%(self.complex_regressor.hashed_name)
-        if(F1 > 0.8):
+        if(adj_accuracy > 0.7):
             path += '%d_%d_%d_%d.pkl'%(
                 cfs_mat[0, 0],cfs_mat[0, 1], cfs_mat[1, 0], cfs_mat[1, 1])
             self.complex_regressor.save(path)
