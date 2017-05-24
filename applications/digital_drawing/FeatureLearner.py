@@ -99,11 +99,11 @@ class FeatureLearner(object):
             print('           TP=%d, FN=%d, FP=%d, TN=%d'%(
                 cfs_mat[0, 0],cfs_mat[0, 1], cfs_mat[1, 0], cfs_mat[1, 1]))
         path = 'save_models/'+self.get_regressor_path()[:-4]
-        path += '_%s_'%(self.complex_regressor.hashed_name)
+        path += '_%s_'%(model.hashed_name)
         if(adj_accuracy > 0.7):
             path += '%d_%d_%d_%d.pkl'%(
                 cfs_mat[0, 0],cfs_mat[0, 1], cfs_mat[1, 0], cfs_mat[1, 1])
-            self.complex_regressor.save(path)
+            model.save(path)
         return adj_accuracy, accuracy, precision, recall, F1
     
     def learn_features_for_subject(self, subject, model=None, reg_meth='GomPlex'):
@@ -112,7 +112,7 @@ class FeatureLearner(object):
         # subjects = self.df_drawing_data.index
         # subjects = list(set(subjects).difference([subject]))
         # X_train, y_train = self.get_input_output_matrix_by_subjects(subjects)
-        # self.complex_regressor.fit(X_train, y_train)
+        # model.fit(X_train, y_train)
         X, y = self.get_input_output_matrix_by_subject(subject)
         X_ci, X_nonci = X.copy(), X.copy()
         X_ci[:, 0], X_nonci[:, 0] = 1, 0
