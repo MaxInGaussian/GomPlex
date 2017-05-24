@@ -66,7 +66,7 @@ class FeatureLearner(object):
         cfs_mat = np.zeros((2, 2))
         ci_p = (self.df_drawing_data['MoCA Total'] < self.moca_cutoff).mean()
         for subject in subjects:
-            ci, y, mu_ci, std_ci, mu_nonci, std_nonci = self.learn_features_for_subject(model, subject, reg_meth)
+            ci, y, mu_ci, std_ci, mu_nonci, std_nonci = self.learn_features_for_subject(subject, model, reg_meth)
             log_p_ci = -np.sum(((mu_ci-y)/std_ci).real**2)-0.5*np.log(std_ci[0, 0].real)-\
                 np.sum(((mu_ci-y)/std_ci).imag**2)-0.5*np.log(std_ci[0, 0].imag)
             log_p_nonci = -np.sum(((mu_nonci-y)/std_nonci).real**2)-0.5*np.log(std_nonci[0, 0].real)-\
