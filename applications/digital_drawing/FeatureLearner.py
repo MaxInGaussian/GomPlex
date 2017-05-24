@@ -35,7 +35,7 @@ class FeatureLearner(object):
         self.stroke_size_tol = stroke_size_tol
         self.stroke_length_tol = stroke_length_tol
         self.use_past = use_past
-        self.forecast_step = 1/sample_time/5
+        self.forecast_step = sample_time/5
         self.metric = Metric(metric)
         self.show_training_drawings = show_training_drawings
         self.show_predicted_drawings = show_predicted_drawings
@@ -63,23 +63,20 @@ class FeatureLearner(object):
         self.load_regression(reg_meth)
         subjects = self.df_drawing_data.index
         cfs_mat = np.zeros((2, 2))
-        X, y = [], []
+        ci_p = (self.df_drawing_data['MoCA Total'] < self.moca_cutoff).mean()
         for subject in subjects:
-            ci, mu_ci, mu_nonci = self.learn_features_for_subject(subject, reg_meth)
-            X.append((mu_ci/mu_nonci).ravel().tolist())
-            y.append(ci)
-        for i in range(len(X)):
-            logistic = linear_model.LogisticRegression()
-            logistic.fit(X[:i]+X[i+1:], y[:i]+y[i+1:])
-            pred_ci = logistic.predict(np.atleast_2d(X[i]))[0]
-            ci = y[i]
-            if(pred_ci == 1 and ci == 1):
+            ci, y, mu_ci, mu_nonci = self.learn_features_for_subject(subject, reg_meth)
+            log_p_ci = np.log(ci_p)-np.sum(np.absolute((mu_ci-y)/std_ci)**2)-0.5*np.log(std_ci)
+            log_p_nonci = np.log(1-ci_p)-np.sum(np.absolute((mu_nonci-y)/std_nonci)**2)-0.5*np.log(std_nonci)
+            pred_ci = exp(log_p_ci)/(exp(log_p_ci)+exp(log_p_nonci))
+            print(exp(log_p_ci))
+            if(pred_ci >= 0.5 and ci == 1):
                 cfs_mat[0, 0] += 1
-            elif(pred_ci == 0 and ci == 1):
+            elif(pred_ci < 0.5 and ci == 1):
                 cfs_mat[0, 1] += 1
-            elif(pred_ci == 1 and ci == 0):
+            elif(pred_ci >= 0.5 and ci == 0):
                 cfs_mat[1, 0] += 1
-            elif(pred_ci == 0 and ci == 0):
+            elif(pred_ci < 0.5 and ci == 0):
                 cfs_mat[1, 1] += 1
             accuracy = (cfs_mat[0, 0]+cfs_mat[1, 1])/np.sum(cfs_mat)
             precision = 0 if np.sum(cfs_mat[:, 0]) == 0 else\
@@ -90,9 +87,13 @@ class FeatureLearner(object):
                 cfs_mat[1, 1]/np.sum(cfs_mat[1])
             F1 = 0 if precision+recall == 0 else\
                 2*(precision*recall)/(precision+recall)
-            print('  (%d|%d), precision=%.4f, recall=%.4f, F1=%.4f'%(
-                ci, pred_ci, precision, recall, F1))
-            print('             TP=%d, FN=%d, FP=%d, TN=%d'%(
+            adj_accuracy = 0 if np.sum(cfs_mat[1]) == 0 or\
+                np.sum(cfs_mat[0]) == 0 else\
+                    cfs_mat[0, 0]/np.sum(cfs_mat[0])/2+\
+                        cfs_mat[1, 1]/np.sum(cfs_mat[1])/2
+            print('  (%d|%.3f), accuracy=%.3f, adj_accuracy=%.3f'%(
+                ci, pred_ci, accuracy, adj_accuracy))
+            print('           TP=%d, FN=%d, FP=%d, TN=%d'%(
                 cfs_mat[0, 0],cfs_mat[0, 1], cfs_mat[1, 0], cfs_mat[1, 1]))
         path = 'save_models/'+self.get_regressor_path()[:-4]
         path += '_%s_'%(self.complex_regressor.hashed_name)
@@ -114,8 +115,7 @@ class FeatureLearner(object):
         X_ci[:, 0], X_nonci[:, 0] = 1, 0
         mu_ci, std_ci = self.complex_regressor.predict(X_ci)
         mu_nonci, std_nonci = self.complex_regressor.predict(X_nonci)
-        ci_p = (self.df_drawing_data['MoCA Total'] < self.moca_cutoff).mean()
-        return X[0, 0], np.absolute(mu_ci-y)**2, np.absolute(mu_nonci-y)**2
+        return X[0, 0], y, mu_ci, mu_nonci
     
     def show_predicted_drawing(self, X, y, y_ci, y_nonci):
         fig = plt.figure()
@@ -238,9 +238,9 @@ class FeatureLearner(object):
         drawing, d_cL, d_V, d_DI = self.get_drawing_features_by_XYWT(drawing)
         d_X, d_Y, d_W, d_T = drawing.T.tolist()
         d_cT = np.cumsum(d_T)
-        rand_bound = d_cT[-1]*(1-self.forecast_step)
+        rand_bound = d_cT[-1]-np.median(d_T)*self.forecast_step
         rand_bound_max = bisect_left(d_cT, rand_bound)
-        rand_bound = d_cT[-1]*self.use_past*self.forecast_step
+        rand_bound = np.median(d_T)*self.use_past*self.forecast_step
         rand_bound_min = max(self.use_past, bisect_left(d_cT, rand_bound))
         if(rand_bound_min>=rand_bound_max):
             print(d_cT)
@@ -248,29 +248,30 @@ class FeatureLearner(object):
         input, target = [], []
         while(len(input) < self.sample_time):
             d_ci = npr.choice(rand_range)
+            x, y = d_X[d_ci], d_Y[d_ci]
             v, di = d_V[d_ci], d_DI[d_ci]
-            lp, tp = d_cL[d_ci]/d_cL[-1], d_cT[d_ci]/d_cT[-1]
-            cur_info = []
+            lp, tp = d_cL[d_ci], d_cT[d_ci]
+            cur_info = [lp, tp, x, y]
             V, DI = [v], [di]
             I = [d_ci]
             for d_p in range(self.use_past+1):
-                d_ptp = tp-(d_p+1)*self.forecast_step
-                d_pi = max(0, bisect_left(d_cT, d_cT[-1]*d_ptp)-1)
+                d_ptp = tp-(d_p+1)*self.forecast_step*np.median(d_T)
+                d_pi = max(0, bisect_left(d_cT, d_ptp)-1)
                 cur_info.extend([
                     d_V[d_pi] if d_pi==I[-1] else np.mean(d_V[d_pi:I[-1]]),
                     d_DI[d_pi] if d_pi==I[-1] else np.mean(d_DI[d_pi:I[-1]])])
                 I.append(d_pi)
             if(np.any(np.isnan(cur_info))):
                 print(I)
-            d_ftp = tp+self.forecast_step
-            d_fi = bisect_left(d_cT, d_cT[-1]*d_ftp)
+            d_ftp = tp+self.forecast_step*np.median(d_T)
+            d_fi = bisect_left(d_cT, d_ftp)-1
             I.append(d_fi)
             if(min(I) < 0):
                 continue
             if(self.show_training_drawings):
                 print(I)
             input.append(cur_info)
-            target.append([d_V[d_fi]+1j*(d_DI[d_fi])])
+            target.append([d_X[d_fi]+1j*(d_Y[d_fi])])
         return np.array(input), np.array(target)
     
     def get_drawing_features_by_XYWT(self, drawing):
@@ -292,25 +293,31 @@ class FeatureLearner(object):
             stroke_size = ed-st+1
             if(stroke_size < self.stroke_size_tol):
                 continue
-            stroke_frag_lengths = [0]
-            immediate_velocities = [0]
-            immediate_direcions = [0]
+            frag_I = []
+            stroke_frag_lengths = []
+            immediate_velocities = []
+            immediate_direcions = []
             for d_i in range(st+1, ed+1):
                 frag_length = length(d_X[d_i], d_Y[d_i], d_X[d_i-1], d_Y[d_i-1])
-                stroke_frag_lengths.append(frag_length)
-                immediate_velocities.append(frag_length/d_T[d_i-1])
                 frag_direction = d_X[d_i]-d_X[d_i-1]+1j*(d_Y[d_i]-d_Y[d_i-1])               
                 frag_direction = np.angle(frag_direction, deg=True)
+                frag_velocity = frag_length/d_T[d_i]
+                if(frag_velocity>20):
+                    continue
+                frag_I.append(d_i)
+                stroke_frag_lengths.append(frag_length)
+                immediate_velocities.append(frag_velocity)
                 immediate_direcions.append(frag_direction)
             stroke_length = np.sum(stroke_frag_lengths)
             if(len(strokes) > 0 and
                 stroke_length < min(self.stroke_length_tol, min(strokes)/2)):
                 continue
+            immediate_direcions[0] = immediate_direcions[1]
             d_L.extend(stroke_frag_lengths)
             d_V.extend(immediate_velocities)
             d_DI.extend(immediate_direcions)
             d_ST.append(len(d_I))
-            d_I.extend(list(range(st, ed+1)))
+            d_I.extend(frag_I)
             strokes.append(stroke_length)
         drawing = drawing[d_I]
         d_cL, d_V, d_DI = np.cumsum(d_L), np.array(d_V), np.array(d_DI)
