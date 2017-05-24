@@ -57,19 +57,22 @@ class FeatureLearner(object):
     def load_regression(self, reg_meth='GomPlex'):
         model_path = self.get_regressor_path(reg_meth)
         if(reg_meth == 'GomPlex'):
-            self.complex_regressor = GomPlex().load(model_path)
+            return GomPlex().load(model_path)
     
-    def eval_features_for_subjects(self, reg_meth='GomPlex'):
-        self.load_regression(reg_meth)
+    def eval_features_for_subjects(self, model=None, reg_meth='GomPlex'):
+        if(model is None):
+            model = self.load_regression(reg_meth)
         subjects = self.df_drawing_data.index
         cfs_mat = np.zeros((2, 2))
         ci_p = (self.df_drawing_data['MoCA Total'] < self.moca_cutoff).mean()
         for subject in subjects:
-            ci, y, mu_ci, mu_nonci = self.learn_features_for_subject(subject, reg_meth)
-            log_p_ci = np.log(ci_p)-np.sum(np.absolute((mu_ci-y)/std_ci)**2)-0.5*np.log(std_ci)
-            log_p_nonci = np.log(1-ci_p)-np.sum(np.absolute((mu_nonci-y)/std_nonci)**2)-0.5*np.log(std_nonci)
-            pred_ci = exp(log_p_ci)/(exp(log_p_ci)+exp(log_p_nonci))
-            print(exp(log_p_ci))
+            ci, y, mu_ci, std_ci, mu_nonci, std_nonci = self.learn_features_for_subject(model, subject, reg_meth)
+            log_p_ci = -np.sum(((mu_ci-y)/std_ci).real**2)-0.5*np.log(std_ci[0, 0].real)-\
+                np.sum(((mu_ci-y)/std_ci).imag**2)-0.5*np.log(std_ci[0, 0].imag)
+            log_p_nonci = -np.sum(((mu_nonci-y)/std_nonci).real**2)-0.5*np.log(std_nonci[0, 0].real)-\
+                np.sum(((mu_nonci-y)/std_nonci).imag**2)-0.5*np.log(std_nonci[0, 0].imag)
+            pred_ci = np.exp(log_p_ci)/(np.exp(log_p_ci)+np.exp(log_p_nonci))
+            print(np.exp(log_p_ci), np.exp(log_p_nonci))
             if(pred_ci >= 0.5 and ci == 1):
                 cfs_mat[0, 0] += 1
             elif(pred_ci < 0.5 and ci == 1):
@@ -101,11 +104,11 @@ class FeatureLearner(object):
             path += '%d_%d_%d_%d.pkl'%(
                 cfs_mat[0, 0],cfs_mat[0, 1], cfs_mat[1, 0], cfs_mat[1, 1])
             self.complex_regressor.save(path)
-        return accuracy, precision, recall, F1
+        return adj_accuracy, accuracy, precision, recall, F1
     
-    def learn_features_for_subject(self, subject, reg_meth='GomPlex'):
-        if(self.complex_regressor is None):
-            self.load_regression(reg_meth)
+    def learn_features_for_subject(self, subject, model=None, reg_meth='GomPlex'):
+        if(model is None):
+            model = self.load_regression(reg_meth)
         # subjects = self.df_drawing_data.index
         # subjects = list(set(subjects).difference([subject]))
         # X_train, y_train = self.get_input_output_matrix_by_subjects(subjects)
@@ -113,9 +116,9 @@ class FeatureLearner(object):
         X, y = self.get_input_output_matrix_by_subject(subject)
         X_ci, X_nonci = X.copy(), X.copy()
         X_ci[:, 0], X_nonci[:, 0] = 1, 0
-        mu_ci, std_ci = self.complex_regressor.predict(X_ci)
-        mu_nonci, std_nonci = self.complex_regressor.predict(X_nonci)
-        return X[0, 0], y, mu_ci, mu_nonci
+        mu_ci, std_ci = model.predict(X_ci)
+        mu_nonci, std_nonci = model.predict(X_nonci)
+        return X[0, 0], y, mu_ci, std_ci, mu_nonci, std_nonci
     
     def show_predicted_drawing(self, X, y, y_ci, y_nonci):
         fig = plt.figure()
@@ -147,19 +150,18 @@ class FeatureLearner(object):
                 cv_folds=cv_folds, plot=plot_error)
             print('  Done.')
             print('# Choosing GomPlex Models')
-            new_score = self.metric.eval(y_test, *gp.predict(X_test))
+            new_score = self.eval_features_for_subjects(model=gp)[0]
             print('  new score - %s=%.6f'%(self.metric.metric, new_score))
             model_path = self.get_regressor_path(reg_meth)
             if(not os.path.exists(model_path)):
                 gp.save(model_path)
             else:
                 best_gp = GomPlex().load(model_path).fit(X_train, y_train)
-                ori_score = self.metric.eval(y_test, *best_gp.predict(X_test))
+                ori_score = self.eval_features_for_subjects()[0]
                 print('  ori score - %s=%.6f'%(self.metric.metric, ori_score))
-                if(new_score*0.9 < ori_score):
+                if(new_score < ori_score):
                     gp.save(model_path)
                     print('  Found New Model!')
-                    self.eval_features_for_subjects()
             print('  Done.')
         elif(reg_meth == "MLP"):
             from keras.models import Sequential
