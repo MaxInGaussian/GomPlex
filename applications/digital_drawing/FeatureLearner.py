@@ -159,7 +159,7 @@ class FeatureLearner(object):
                 best_gp = GomPlex().load(model_path).fit(X_train, y_train)
                 ori_score = self.eval_features_for_subjects()[0]
                 print('  ori score - %s=%.6f'%(self.metric.metric, ori_score))
-                if(new_score < ori_score):
+                if(new_score > ori_score):
                     gp.save(model_path)
                     print('  Found New Model!')
             print('  Done.')
