@@ -14,6 +14,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from bisect import bisect_left
 from sklearn import linear_model
+from scipy.stats import norm, gmean
 
 from GomPlex import *
 
@@ -42,6 +43,30 @@ class FeatureLearner(object):
     
     def load_drawing_data(self, csv_path):
         self.df_drawing_data = pd.read_csv(csv_path, index_col=0, header=0)
+        self.ci = self.df_drawing_data['MoCA Total'] < self.moca_cutoff
+        self.ci_p = self.ci.mean()
+        self.nci = self.df_drawing_data['MoCA Total'] >= self.moca_cutoff
+        self.nci_p = self.nci.mean()
+        if(self.use_age):
+            self.age = self.df_drawing_data['Age']
+            self.age_ci = self.age[self.ci]
+            age_ci_mu, age_ci_std = self.age_ci.mean(), self.age_ci.std()
+            self.age_ci_rv = norm(loc=age_ci_mu, scale=age_ci_std)
+            self.age_nci = self.age[self.nci]
+            age_nci_mu, age_nci_std = self.age_nci.mean(), self.age_nci.std()
+            self.age_nci_rv = norm(loc=age_nci_mu, scale=age_nci_std)
+        if(self.use_gender):
+            self.male = self.df_drawing_data['Male']
+            self.male_ci_p = self.male[self.ci].mean()
+            self.male_nci_p = self.male[self.nci].mean()
+        if(self.use_edu_level):
+            edu_cols = ['Uneducated', 'Primary', 'Secondary', 'University']
+            edu_levels = self.df_drawing_data[edu_cols]
+            self.edu_level_ci_p = edu_levels[self.ci].mean(0)
+            self.edu_level_ci_p /= self.edu_level_ci_p.sum()
+            self.edu_level_nci_p = edu_levels[self.nci].mean(0)
+            self.edu_level_nci_p /= self.edu_level_nci_p.sum()
+            self.edu_levels = edu_levels.idxmax(axis=1)
         return self
     
     def get_regressor_path(self, reg_meth='GomPlex'):
@@ -64,15 +89,29 @@ class FeatureLearner(object):
             model = self.load_regression(reg_meth)
         subjects = self.df_drawing_data.index
         cfs_mat = np.zeros((2, 2))
-        ci_p = (self.df_drawing_data['MoCA Total'] < self.moca_cutoff).mean()
         for subject in subjects:
-            ci, y, mu_ci, std_ci, mu_nonci, std_nonci = self.learn_features_for_subject(subject, model, reg_meth)
-            log_p_ci = -np.sum(((mu_ci-y)/std_ci).real**2)-0.5*np.log(std_ci[0, 0].real)-\
-                np.sum(((mu_ci-y)/std_ci).imag**2)-0.5*np.log(std_ci[0, 0].imag)
-            log_p_nonci = -np.sum(((mu_nonci-y)/std_nonci).real**2)-0.5*np.log(std_nonci[0, 0].real)-\
-                np.sum(((mu_nonci-y)/std_nonci).imag**2)-0.5*np.log(std_nonci[0, 0].imag)
-            pred_ci = np.exp(log_p_ci)/(np.exp(log_p_ci)+np.exp(log_p_nonci))
-            print(np.exp(log_p_ci), np.exp(log_p_nonci))
+            self.df_drawing_data['Age']
+            ci, y, mu_ci, std_ci, mu_nci, std_nci =\
+                self.learn_features_for_subject(subject, model, reg_meth)
+            prob_P_ci = norm.pdf(y.real-mu_ci.real, scale=std_ci[0, 0].real)*\
+                norm.pdf(y.imag-mu_ci.imag, scale=std_ci[0, 0].imag)
+            prob_P_nci = norm.pdf(y.real-mu_nci.real, scale=std_nci[0, 0].real)*\
+                norm.pdf(y.imag-mu_nci.imag, scale=std_nci[0, 0].imag)
+            joint_U_ci, joint_U_nci = self.ci_p, self.nci_p
+            if(self.use_age):
+                joint_U_ci *= self.age_ci_rv.pdf(self.age[subject])
+                joint_U_nci *= self.age_nci_rv.pdf(self.age[subject])
+            if(self.use_gender):
+                joint_U_ci *= self.male_ci_p if\
+                    self.male[subject]==1 else 1-self.male_ci_p
+                joint_U_nci *= self.male_nci_p if\
+                    self.male[subject]==1 else 1-self.male_nci_p
+            if(self.use_edu_level):
+                joint_U_ci *= self.edu_level_ci_p[self.edu_levels[subject]]
+                joint_U_nci *= self.edu_level_nci_p[self.edu_levels[subject]]
+            pred_ci = joint_U_ci*gmean(prob_P_ci)/(
+                joint_U_ci*gmean(prob_P_ci)+\
+                    joint_U_nci*gmean(prob_P_nci))
             if(pred_ci >= 0.5 and ci == 1):
                 cfs_mat[0, 0] += 1
             elif(pred_ci < 0.5 and ci == 1):
@@ -94,40 +133,34 @@ class FeatureLearner(object):
                 np.sum(cfs_mat[0]) == 0 else\
                     cfs_mat[0, 0]/np.sum(cfs_mat[0])/2+\
                         cfs_mat[1, 1]/np.sum(cfs_mat[1])/2
-            print('  (%d|%.3f), accuracy=%.3f, adj_accuracy=%.3f'%(
-                ci, pred_ci, accuracy, adj_accuracy))
-            print('           TP=%d, FN=%d, FP=%d, TN=%d'%(
-                cfs_mat[0, 0],cfs_mat[0, 1], cfs_mat[1, 0], cfs_mat[1, 1]))
+            print('  (%d|%.3f), accuracy=%.3f, F1=%.3f, recall=%.3f, specificity=%.3f'%(
+                ci, pred_ci, accuracy, F1, recall, specificity))
+            print('             TP=%d, FN=%d, FP=%d, TN=%d'%(
+                cfs_mat[0, 0], cfs_mat[0, 1], cfs_mat[1, 0], cfs_mat[1, 1]))
         path = 'save_models/'+self.get_regressor_path()[:-4]
-        path += '_%s_'%(model.hashed_name)
-        if(adj_accuracy > 0.7):
-            path += '%d_%d_%d_%d.pkl'%(
-                cfs_mat[0, 0],cfs_mat[0, 1], cfs_mat[1, 0], cfs_mat[1, 1])
+        path += '_%s'%(model.hashed_name)
+        if(F1 > 0.8):
             model.save(path)
-        return adj_accuracy, accuracy, precision, recall, F1
+        return adj_accuracy, accuracy, precision, recall, F1, cfs_mat
     
     def learn_features_for_subject(self, subject, model=None, reg_meth='GomPlex'):
         if(model is None):
             model = self.load_regression(reg_meth)
-        # subjects = self.df_drawing_data.index
-        # subjects = list(set(subjects).difference([subject]))
-        # X_train, y_train = self.get_input_output_matrix_by_subjects(subjects)
-        # model.fit(X_train, y_train)
         X, y = self.get_input_output_matrix_by_subject(subject)
-        X_ci, X_nonci = X.copy(), X.copy()
-        X_ci[:, 0], X_nonci[:, 0] = 1, 0
+        X_ci, X_nci = X.copy(), X.copy()
+        X_ci[:, 0], X_nci[:, 0] = 1, 0
         mu_ci, std_ci = model.predict(X_ci)
-        mu_nonci, std_nonci = model.predict(X_nonci)
-        return X[0, 0], y, mu_ci, std_ci, mu_nonci, std_nonci
+        mu_nci, std_nci = model.predict(X_nci)
+        return X[0, 0], y, mu_ci, std_ci, mu_nci, std_nci
     
-    def show_predicted_drawing(self, X, y, y_ci, y_nonci):
+    def show_predicted_drawing(self, X, y, y_ci, y_nci):
         fig = plt.figure()
         ax = fig.gca()
         ax.scatter(y.real, y.imag, color='black', marker='o', s=20,
             label="true drawing path (%d)"%(int(X[0, 0])))
         ax.scatter(y_ci.real, y_ci.imag, color='red', marker='o', s=20,
             label="CI predicted path")
-        ax.scatter(y_nonci.real, y_nonci.imag, color='green', marker='o', s=20,
+        ax.scatter(y_nci.real, y_nci.imag, color='green', marker='o', s=20,
             label="non-CI predicted path")
         ax.legend()
         ax.set_xlabel('X')
@@ -187,13 +220,13 @@ class FeatureLearner(object):
         rand_ci = ci_subjects[rand_ci]
         rand_ci_train = list(set(ci_subjects).difference(rand_ci))
         nonci_subjects = self.df_drawing_data[moca_data>=self.moca_cutoff].index
-        num_nonci = len(nonci_subjects)
-        test_nonci = int(num_nonci*ratio)
-        rand_nonci = npr.choice(range(num_nonci), test_nonci, replace=False)
-        rand_nonci = nonci_subjects[rand_nonci]
-        rand_nonci_train = list(set(nonci_subjects).difference(rand_nonci))
-        subjects_train = rand_ci_train+rand_nonci_train
-        subjects_test = rand_ci.tolist()+rand_nonci.tolist()
+        num_nci = len(nonci_subjects)
+        test_nci = int(num_nci*ratio)
+        rand_nci = npr.choice(range(num_nci), test_nci, replace=False)
+        rand_nci = nonci_subjects[rand_nci]
+        rand_nci_train = list(set(nonci_subjects).difference(rand_nci))
+        subjects_train = rand_ci_train+rand_nci_train
+        subjects_test = rand_ci.tolist()+rand_nci.tolist()
         return subjects_train, subjects_test
     
     def get_input_output_matrix_by_subjects(self, subjects):
@@ -331,6 +364,67 @@ class FeatureLearner(object):
             self.show_drawing_data(drawing, d_DI, 'Direction')
             plt.show()
         return drawing, d_cL, d_V, d_DI
+        
+    def show_velocity_graph(self, subject):
+        decode = lambda str: np.array(list(map(float, str.split('|'))))
+        d_X = decode(self.df_drawing_data['X'][subject])
+        d_Y = decode(self.df_drawing_data['Y'][subject])
+        d_W = decode(self.df_drawing_data['W'][subject])
+        d_W[-1] = 0
+        d_T = decode(self.df_drawing_data['T'][subject])/1000
+        drawing = np.vstack([d_X, d_Y, d_W, d_T]).T
+        if(self.centimeter):
+            drawing[:, :2] /= self.CENTIMETER_TO_PIXELS
+        drawing, d_cL, d_V, d_DI = self.get_drawing_features_by_XYWT(drawing)
+        d_cT = np.cumsum(drawing[:, 3])
+        fig = plt.figure()
+        ax = fig.gca()
+        stop_points = np.sort(np.where(drawing[:, 2]==1)[0])
+        for s in range(len(stop_points)+1):
+            st = stop_points[s-1]+1 if s > 0 else 0
+            ed = stop_points[s] if s < len(stop_points) else drawing.shape[0]-1
+            if(st >= ed):
+                break
+            d_S = list(range(st, ed+1))
+            ax.plot(d_cT[d_S], d_V[d_S], 'k-')
+            ax.scatter(d_cT[st], d_V[st], color='b')
+            ax.scatter(d_cT[ed], d_V[ed], color='r')
+        ax.legend()
+        ax.set_xlabel('Drawing Time (s)')
+        ax.set_ylabel('Velocity (cm/s)')
+        ax.set_xlim([min(d_cT), max(d_cT)])
+        plt.show()
+        
+    def show_direction_graph(self, subject):
+        decode = lambda str: np.array(list(map(float, str.split('|'))))
+        d_X = decode(self.df_drawing_data['X'][subject])
+        d_Y = decode(self.df_drawing_data['Y'][subject])
+        d_W = decode(self.df_drawing_data['W'][subject])
+        d_W[-1] = 0
+        d_T = decode(self.df_drawing_data['T'][subject])/1000
+        drawing = np.vstack([d_X, d_Y, d_W, d_T]).T
+        if(self.centimeter):
+            drawing[:, :2] /= self.CENTIMETER_TO_PIXELS
+        drawing, d_cL, d_V, d_DI = self.get_drawing_features_by_XYWT(drawing)
+        d_cT = np.cumsum(drawing[:, 3])
+        fig = plt.figure()
+        ax = fig.gca()
+        stop_points = np.sort(np.where(drawing[:, 2]==1)[0])
+        print(len(stop_points))
+        for s in range(len(stop_points)+1):
+            st = stop_points[s-1]+1 if s > 0 else 0
+            ed = stop_points[s] if s < len(stop_points) else drawing.shape[0]-1
+            if(st >= ed):
+                break
+            d_S = list(range(st, ed+1))
+            ax.plot(d_cT[d_S], d_DI[d_S], 'k-')
+            ax.scatter(d_cT[st], d_DI[st], color='b')
+            ax.scatter(d_cT[ed], d_DI[ed], color='r')
+        ax.legend()
+        ax.set_xlabel('Drawing Time (s)')
+        ax.set_ylabel('Angle (deg)')
+        ax.set_xlim([min(d_cT), max(d_cT)])
+        plt.show()
         
     def show_drawing_data(self, drawing, variable=None, label="Time"):
         fig = plt.figure()
