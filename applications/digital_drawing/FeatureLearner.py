@@ -14,7 +14,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from bisect import bisect_left
 from sklearn import linear_model
-from scipy.stats import norm, gmean
+from scipy.stats import norm
 
 from GomPlex import *
 
@@ -85,7 +85,9 @@ class FeatureLearner(object):
             return GomPlex().load(model_path)
     
     def eval_features_for_subjects(self, model=None, reg_meth='GomPlex'):
+        echo_message = False
         if(model is None):
+            echo_message = True
             model = self.load_regression(reg_meth)
         subjects = self.df_drawing_data.index
         cfs_mat = np.zeros((2, 2))
@@ -109,9 +111,9 @@ class FeatureLearner(object):
             if(self.use_edu_level):
                 joint_U_ci *= self.edu_level_ci_p[self.edu_levels[subject]]
                 joint_U_nci *= self.edu_level_nci_p[self.edu_levels[subject]]
-            pred_ci = joint_U_ci*gmean(prob_P_ci)/(
-                joint_U_ci*gmean(prob_P_ci)+\
-                    joint_U_nci*gmean(prob_P_nci))
+            pred_ci = joint_U_ci*np.product(prob_P_ci)/(
+                joint_U_ci*np.product(prob_P_ci)+\
+                    joint_U_nci*np.product(prob_P_nci))
             if(pred_ci >= 0.5 and ci == 1):
                 cfs_mat[0, 0] += 1
             elif(pred_ci < 0.5 and ci == 1):
@@ -133,15 +135,12 @@ class FeatureLearner(object):
                 np.sum(cfs_mat[0]) == 0 else\
                     cfs_mat[0, 0]/np.sum(cfs_mat[0])/2+\
                         cfs_mat[1, 1]/np.sum(cfs_mat[1])/2
-            print('  (%d|%.3f), accuracy=%.3f, F1=%.3f, recall=%.3f, specificity=%.3f'%(
-                ci, pred_ci, accuracy, F1, recall, specificity))
-            print('             TP=%d, FN=%d, FP=%d, TN=%d'%(
-                cfs_mat[0, 0], cfs_mat[0, 1], cfs_mat[1, 0], cfs_mat[1, 1]))
-        path = 'save_models/'+self.get_regressor_path()[:-4]
-        path += '_%s'%(model.hashed_name)
-        if(F1 > 0.8):
-            model.save(path)
-        return adj_accuracy, accuracy, precision, recall, F1, cfs_mat
+            if(echo_message):
+                print('  (%d|%.3f), F1=%.3f, recall=%.3f, specificity=%.3f'%(
+                    ci, pred_ci, F1, recall, specificity))
+                print('             TP=%d, FN=%d, FP=%d, TN=%d'%(
+                    cfs_mat[0, 0], cfs_mat[0, 1], cfs_mat[1, 0], cfs_mat[1, 1]))
+        return F1, accuracy, precision, recall, cfs_mat
     
     def learn_features_for_subject(self, subject, model=None, reg_meth='GomPlex'):
         if(model is None):
@@ -169,7 +168,7 @@ class FeatureLearner(object):
         ax.set_ylim([-1, 9])
     
     def train_regressor(self, reg_meth='GomPlex', iter_tol=30, ratio=0.3,
-        cv_folds=3, plot_error=False):
+        cv_folds=3, score_rerun=20, plot_error=False):
         if(reg_meth == 'GomPlex'):
             # Default Regression Method - GomPlex
             print('# Preprocessing Raw Drawing Data')
@@ -183,17 +182,24 @@ class FeatureLearner(object):
                 cv_folds=cv_folds, plot=plot_error)
             print('  Done.')
             print('# Choosing GomPlex Models')
-            new_score = self.eval_features_for_subjects(model=gp)[0]
-            print('  new score - %s=%.6f'%(self.metric.metric, new_score))
+            scores = [self.eval_features_for_subjects(model=gp)[0]
+                for _ in range(score_rerun)]
+            print('  new score = %.3f, %.3f'%(np.mean(scores), np.std(scores)))
             model_path = self.get_regressor_path(reg_meth)
             if(not os.path.exists(model_path)):
                 gp.save(model_path)
             else:
                 best_gp = GomPlex().load(model_path).fit(X_train, y_train)
-                ori_score = self.eval_features_for_subjects()[0]
-                print('  ori score - %s=%.6f'%(self.metric.metric, ori_score))
-                if(new_score > ori_score):
+                best_scores = [self.eval_features_for_subjects(model=best_gp)[0]
+                    for _ in range(score_rerun)]
+                print('  best score = %.3f, %.3f'%(
+                    np.mean(best_scores), np.std(best_scores)))
+                if(np.mean(scores) > np.mean(best_scores)):
                     gp.save(model_path)
+                    backup_path = 'save_models/'+model_path[:-4]
+                    backup_path += '_%s_%.3f_%.3f.pkl'%(
+                        gp.hashed_name, np.mean(scores), np.std(scores))
+                    gp.save(backup_path)
                     print('  Found New Model!')
             print('  Done.')
         elif(reg_meth == "MLP"):
