@@ -23,7 +23,7 @@ class FeatureLearner(object):
     df_drawing_data, complex_regressor = None, None
     CENTIMETER_TO_PIXELS = 62.992126
     
-    def __init__(self, moca_cutoff=20, sample_time=100, use_past=10,
+    def __init__(self, moca_cutoff=21, sample_time=100, use_past=10,
         use_gender=True, use_age=True, use_edu_level=True,
         stroke_size_tol=10, stroke_length_tol=1, centimeter=True, metric='nmse',
         show_training_drawings=False, show_predicted_drawings=False):
