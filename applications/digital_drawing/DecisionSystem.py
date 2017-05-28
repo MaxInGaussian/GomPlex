@@ -151,6 +151,7 @@ class DecisionSystem(object):
         fpr, tpr, thresholds = roc_curve(cis, pred_cis)
         AUC = auc(fpr, tpr)
         if(echo_message):
+            print(model.hashed_name)
             plt.plot(fpr, tpr, label='ROC curve (AUC = %0.3f)' % AUC)
             plt.plot([0, 1], [0, 1], 'k--')
             plt.xlim([0, 1])
