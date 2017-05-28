@@ -14,11 +14,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from bisect import bisect_left
 from sklearn import linear_model
+from sklearn.metrics import roc_curve, auc
 from scipy.stats import norm
 
 from GomPlex import *
 
-class FeatureLearner(object):
+class DecisionSystem(object):
     
     df_drawing_data, complex_regressor = None, None
     CENTIMETER_TO_PIXELS = 62.992126
@@ -91,10 +92,15 @@ class FeatureLearner(object):
             model = self.load_regression(reg_meth)
         subjects = self.df_drawing_data.index
         cfs_mat = np.zeros((2, 2))
+        cis, pred_cis = [], []
         for subject in subjects:
             self.df_drawing_data['Age']
+            leave_one_out_subjects = list(set(subjects).difference([subject]))
+            X_train, y_train = self.get_input_output_matrix_by_subjects(
+                leave_one_out_subjects)
+            model.fit(X_train, y_train)
             ci, y, mu_ci, std_ci, mu_nci, std_nci =\
-                self.learn_features_for_subject(subject, model, reg_meth)
+                self.predict_next_drawing_state(subject, model, reg_meth)
             prob_P_ci = norm.pdf(y.real-mu_ci.real, scale=std_ci[0, 0].real)*\
                 norm.pdf(y.imag-mu_ci.imag, scale=std_ci[0, 0].imag)
             prob_P_nci = norm.pdf(y.real-mu_nci.real, scale=std_nci[0, 0].real)*\
@@ -135,14 +141,29 @@ class FeatureLearner(object):
                 np.sum(cfs_mat[0]) == 0 else\
                     cfs_mat[0, 0]/np.sum(cfs_mat[0])/2+\
                         cfs_mat[1, 1]/np.sum(cfs_mat[1])/2
+            cis.append(ci)
+            pred_cis.append(pred_ci)
             if(echo_message):
                 print('  (%d|%.3f), F1=%.3f, recall=%.3f, specificity=%.3f'%(
                     ci, pred_ci, F1, recall, specificity))
                 print('             TP=%d, FN=%d, FP=%d, TN=%d'%(
                     cfs_mat[0, 0], cfs_mat[0, 1], cfs_mat[1, 0], cfs_mat[1, 1]))
-        return F1, accuracy, precision, recall, cfs_mat
+        fpr, tpr, thresholds = roc_curve(cis, pred_cis)
+        AUC = auc(fpr, tpr)
+        if(echo_message):
+            plt.plot(fpr, tpr, label='ROC curve (AUC = %0.3f)' % AUC)
+            plt.plot([0, 1], [0, 1], 'k--')
+            plt.xlim([0, 1])
+            plt.ylim([0, 1])
+            plt.xlabel('False Positive Rate (1 - Specifity)')
+            plt.ylabel('True Positive Rate (Sensitivity)')
+            plt.title('Receiver Operating Characteristic')
+            plt.legend(loc="lower right")
+            plt.show()
+            return AUC, F1, cfs_mat, cis, pred_cis
+        return AUC, F1, cfs_mat
     
-    def learn_features_for_subject(self, subject, model=None, reg_meth='GomPlex'):
+    def predict_next_drawing_state(self, subject, model=None, reg_meth='GomPlex'):
         if(model is None):
             model = self.load_regression(reg_meth)
         X, y = self.get_input_output_matrix_by_subject(subject)
@@ -182,23 +203,22 @@ class FeatureLearner(object):
                 cv_folds=cv_folds, plot=plot_error)
             print('  Done.')
             print('# Choosing GomPlex Models')
-            scores = [self.eval_features_for_subjects(model=gp)[0]
-                for _ in range(score_rerun)]
-            print('  new score = %.3f, %.3f'%(np.mean(scores), np.std(scores)))
+            score = self.eval_features_for_subjects(model=gp)[0]
+            print('  new score = %.3f'%(score))
             model_path = self.get_regressor_path(reg_meth)
             if(not os.path.exists(model_path)):
                 gp.save(model_path)
             else:
                 best_gp = GomPlex().load(model_path).fit(X_train, y_train)
-                best_scores = [self.eval_features_for_subjects(model=best_gp)[0]
-                    for _ in range(score_rerun)]
-                print('  best score = %.3f, %.3f'%(
-                    np.mean(best_scores), np.std(best_scores)))
-                if(np.mean(scores) > np.mean(best_scores)):
+                best_score = self.eval_features_for_subjects(model=best_gp)[0]
+                print('  best score = %.3f'%(best_score))
+                if(score > best_score):
                     gp.save(model_path)
+                    cfs_mat = self.eval_features_for_subjects(model=gp)[-1]
                     backup_path = 'save_models/'+model_path[:-4]
-                    backup_path += '_%s_%.3f_%.3f.pkl'%(
-                        gp.hashed_name, np.mean(scores), np.std(scores))
+                    backup_path += '_%s_%d_%d_%d_%d.pkl'%(
+                        gp.hashed_name, cfs_mat[0, 0], cfs_mat[0, 1],
+                        cfs_mat[1, 0], cfs_mat[1, 1])
                     gp.save(backup_path)
                     print('  Found New Model!')
             print('  Done.')
@@ -287,6 +307,7 @@ class FeatureLearner(object):
             print(d_cT)
         rand_range = range(rand_bound_min, rand_bound_max)
         input, target = [], []
+        npr.seed(0)
         while(len(input) < self.sample_time):
             d_ci = npr.choice(rand_range)
             x, y = d_X[d_ci], d_Y[d_ci]
