@@ -6,6 +6,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve, auc
 from DecisionSystem import DecisionSystem
 
 from sys import path
@@ -23,6 +24,20 @@ model.load_drawing_data(DRAWING_RAW_DATA_PATH)
 # model.show_direction_graph('HK1520')
 
 AUC, F1, cfs_mat, cis, pred_cis = model.eval_features_for_subjects()
+fpr, tpr, thresholds = roc_curve(cis, pred_cis)
+AUC = auc(fpr, tpr)
+arg = np.argmax(tpr-fpr)
+plt.plot(fpr, tpr, label='ROC curve (AUC = %0.3f)' % AUC)
+plt.scatter(fpr[arg], tpr[arg], s=50, color='red', marker='x')
+plt.text(fpr[arg]+0.005, tpr[arg]-0.04, '(%.3f, %.3f)'%(fpr[arg], tpr[arg]))
+plt.plot([0, 1], [0, 1], 'k--')
+plt.xlim([0, 1])
+plt.ylim([0, 1])
+plt.xlabel('False Positive Rate (1 - Specifity)')
+plt.ylabel('True Positive Rate (Sensitivity)')
+plt.title('Receiver Operating Characteristic')
+plt.legend(loc="lower right")
+plt.show()
 
 def plot_confusion_matrix(cm, classes):
     normalize=False
