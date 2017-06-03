@@ -1,3 +1,4 @@
 *.pyc
 *.csv
+*.xlsx
 GomPlex/__pycache__
