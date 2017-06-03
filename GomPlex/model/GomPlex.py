@@ -28,7 +28,6 @@ class GomPlex(object):
     def fit(self, X, y,
         cost_type='nlml', cv_folds=1, freqs_update_rate=0.2, opt_rate=1,
         max_iter=500, iter_tol=30, diff_tol=1e-3, early_stop=10, plot=False):
-        y = np.atleast_2d(y).T
         self.freqs_update_rate = freqs_update_rate
         self.cost_type = cost_type
         self.cv_folds = cv_folds

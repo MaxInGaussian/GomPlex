@@ -44,9 +44,9 @@ class Metric(object):
         return nmse_real
 
     def mae(self, target, mu_pred, std_pred):
-        mae = np.mean(np.abd(target.real-mu_pred.real))+\
-            np.mean(np.abd(target.imag-mu_pred.imag))
-        return mae
+        mae = np.mean(np.abs(target.real-mu_pred.real))+\
+            np.mean(np.abs(target.imag-mu_pred.imag))
+        return mae/2
 
     def nlpd(self, target, mu_pred, std_pred):        
         nlpd = np.mean(((target-mu_pred)/std_pred)**2+2*np.log(std_pred))
