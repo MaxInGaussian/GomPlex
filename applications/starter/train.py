@@ -77,8 +77,8 @@ print("Start training ...")
 split = int(X_train.shape[0]*(1-t))
 X_train, y_train, X_valid, y_valid =\
     X_train[:split], y_train[:split], X_train[split:], y_train[split:]
-X_train = X_train.values.astype(np.float32, copy=False)
-X_valid = X_valid.values.astype(np.float32, copy=False)
+X_train = X_train.as_matrix()
+X_valid = X_valid.as_matrix()
     
 print("Generating testing data ...")
 
@@ -86,7 +86,7 @@ sample = pd.read_csv('sample.csv')
 sample['parcelid'] = sample['ParcelId']
 df_test = sample.merge(df_data, on='parcelid', how='left')
 X_test = df_test[X_train.columns]
-X_test = X_test.values.astype(np.float32, copy=False)
+X_test = X_test.as_matrix()
 result = pd.read_csv('sample.csv')
 
 print('  Gathered %d Training Examples.'%(X_train.shape[0]))
