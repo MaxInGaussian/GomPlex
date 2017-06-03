@@ -300,17 +300,14 @@ class DecisionSystem(object):
         drawing, d_cL, d_V, d_DI = self.get_drawing_features_by_XYWT(drawing)
         d_X, d_Y, d_W, d_T = drawing.T.tolist()
         d_cT = np.cumsum(d_T)
-        rand_bound = d_cT[-1]-np.median(d_T)*self.forecast_step
-        rand_bound_max = bisect_left(d_cT, rand_bound)
-        rand_bound = np.median(d_T)*self.use_past*self.forecast_step
-        rand_bound_min = max(self.use_past, bisect_left(d_cT, rand_bound))
-        if(rand_bound_min>=rand_bound_max):
+        bound_max = d_cT[-1]-np.median(d_T)*self.forecast_step
+        bound_min = np.median(d_T)*self.use_past*self.forecast_step
+        if(bound_min>=bound_max):
             print(d_cT)
-        rand_range = range(rand_bound_min, rand_bound_max)
         input, target = [], []
-        npr.seed(0)
         while(len(input) < self.sample_time):
-            d_ci = npr.choice(rand_range)
+            d_ct = (bound_max-bound_min)/self.sample_time*len(input)+bound_min
+            d_ci = max(self.use_past, bisect_left(d_cT, d_ct))
             x, y = d_X[d_ci], d_Y[d_ci]
             v, di = d_V[d_ci], d_DI[d_ci]
             lp, tp = d_cL[d_ci], d_cT[d_ci]
