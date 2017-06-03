@@ -40,7 +40,9 @@ for col in cnt_cols+yr_cols:
 prop[yr_cols] = prop[yr_cols].fillna(value=0)
 df_data = pd.get_dummies(prop[filter_cols])
 
-cat_cols = [col for col in prop.columns if 'id' in col or 'flag' in col]
+prop['taxdelinquencyflag'] = pd.get_dummies(prop['taxdelinquencyflag'])[0]
+
+cat_cols = [col for col in prop.columns if 'id' in col]
 cat_cols.remove('parcelid')
 prop[cat_cols] = prop[cat_cols].fillna(value=0)
 filter_cat_cols = []
@@ -93,35 +95,37 @@ del df_train, df_test, df_data; gc.collect()
 print('  Gathered %d Training Examples.'%(X_train.shape[0]))
 print('  Gathered %d Testing Examples.'%(X_test.shape[0]))
 print('  Done.')
-print('# Training GomPlex')
-gp = GomPlex(npr.randint(int(np.log(X_train.shape[0]))*3)+8, True)
-gp.fit(X_train, y_train, cost_type=metric.metric,
-    iter_tol=iter_tol, cv_folds=cv_folds, plot=plot_error)
-print('  Done.')
-print('# Choosing GomPlex Models')
-score = metric.eval(y_valid, *gp.predict(X_valid))
-print('  new score = %.3f'%(score))
-if(not os.path.exists(model_path)):
-    gp.save(model_path)
-else:
-    best_gp = GomPlex().load(model_path).fit(X_train, y_train)
-    best_score = metric.eval(y_valid, *best_gp.predict(X_valid))
-    print('  best score = %.3f'%(best_score))
-    if(score > best_score):
-        gp.save(model_path)
-        backup_path = 'save_models/%s_%.6f.pkl'%(gp.hashed_name, best_score)
-        gp.save(backup_path)
-        print('  Found New Model!')
 
-        print("Start prediction ...")
-        test_dates = [288, 319, 349, 653, 684, 714]
-        for i, test_date in enumerate(test_dates):
-            X_test[:, -1] = test_date
-            y_test = gp.predict(X_test)[0].ravel()
-            result[result.columns[i+1]] = y_test.real-y_test.imag
-        
-        print("Start write result ...")
-        result.to_csv(gp.hashed_name+'.csv', index=False, float_format='%.6f')
+while (True):
+    print('# Training GomPlex')
+    gp = GomPlex(npr.randint(int(np.log(X_train.shape[0]))*3)+8, True)
+    gp.fit(X_train, y_train, cost_type=metric.metric,
+        iter_tol=iter_tol, cv_folds=cv_folds, plot=plot_error)
+    print('  Done.')
+    print('# Choosing GomPlex Models')
+    score = metric.eval(y_valid, *gp.predict(X_valid))
+    print('  new score = %.3f'%(score))
+    if(not os.path.exists(model_path)):
+        gp.save(model_path)
+    else:
+        best_gp = GomPlex().load(model_path).fit(X_train, y_train)
+        best_score = metric.eval(y_valid, *best_gp.predict(X_valid))
+        print('  best score = %.3f'%(best_score))
+        if(score > best_score):
+            gp.save(model_path)
+            backup_path = 'save_models/%s_%.6f.pkl'%(gp.hashed_name, best_score)
+            gp.save(backup_path)
+            print('  Found New Model!')
+    
+            print("Start prediction ...")
+            test_dates = [288, 319, 349, 653, 684, 714]
+            for i, test_date in enumerate(test_dates):
+                X_test[:, -1] = test_date
+                y_test = gp.predict(X_test)[0].ravel()
+                result[result.columns[i+1]] = y_test.real-y_test.imag
+            
+            print("Start write result ...")
+            result.to_csv(gp.hashed_name+'.csv', index=False, float_format='%.6f')
 
 
 
