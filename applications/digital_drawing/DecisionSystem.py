@@ -37,7 +37,7 @@ class DecisionSystem(object):
         self.stroke_size_tol = stroke_size_tol
         self.stroke_length_tol = stroke_length_tol
         self.use_past = use_past
-        self.forecast_step = sample_time/5
+        self.forecast_step = 10
         self.metric = Metric(metric)
         self.show_training_drawings = show_training_drawings
         self.show_predicted_drawings = show_predicted_drawings
@@ -71,7 +71,7 @@ class DecisionSystem(object):
         return self
     
     def get_regressor_path(self, reg_meth='GomPlex'):
-        model_path = reg_meth+"_s%d_p%d_"%(self.sample_time, self.use_past)
+        model_path = reg_meth+"_f%d_p%d_"%(self.forecast_step, self.use_past)
         if(self.use_gender):
             model_path += "g"
         if(self.use_age):
@@ -305,8 +305,8 @@ class DecisionSystem(object):
         if(bound_min>=bound_max):
             print(d_cT)
         input, target = [], []
-        while(len(input) < self.sample_time):
-            d_ct = (bound_max-bound_min)/self.sample_time*len(input)+bound_min
+        for i in range(self.sample_time):
+            d_ct = (bound_max-bound_min)/self.sample_time*i+bound_min
             d_ci = max(self.use_past, bisect_left(d_cT, d_ct))
             x, y = d_X[d_ci], d_Y[d_ci]
             v, di = d_V[d_ci], d_DI[d_ci]
@@ -326,7 +326,7 @@ class DecisionSystem(object):
             d_ftp = tp+self.forecast_step*np.median(d_T)
             d_fi = bisect_left(d_cT, d_ftp)-1
             I.append(d_fi)
-            if(min(I) < 0):
+            if(min(I) < 0 or np.sum(drawing[np.array(I), 2])>0):
                 continue
             if(self.show_training_drawings):
                 print(I)
