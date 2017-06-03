@@ -70,7 +70,6 @@ X_train = df_train.drop(['parcelid', 'logerror', 'transactiondate', 'propertyzon
 
 print(X_train.shape, y_train.shape)
 
-del df_train; gc.collect()
 
 print("Start training ...")
 
@@ -85,9 +84,11 @@ print("Generating testing data ...")
 sample = pd.read_csv('sample.csv')
 sample['parcelid'] = sample['ParcelId']
 df_test = sample.merge(df_data, on='parcelid', how='left')
-X_test = df_test[X_train.columns]
+X_test = df_test[df_train.columns]
 X_test = X_test.as_matrix()
 result = pd.read_csv('sample.csv')
+
+del df_train, df_test, df_data; gc.collect()
 
 print('  Gathered %d Training Examples.'%(X_train.shape[0]))
 print('  Gathered %d Testing Examples.'%(X_test.shape[0]))
