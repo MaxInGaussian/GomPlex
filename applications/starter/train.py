@@ -67,7 +67,7 @@ y_train_i = np.maximum(0, -y_train)
 y_train = y_train_r+1j*y_train_i
 X_train = df_train.drop(['parcelid', 'logerror', 'transactiondate', 'propertyzoningdesc', 'propertycountylandusecode', 'censustractandblock',
 'rawcensustractandblock'], axis=1)
-
+columns = X_train.columns
 print(X_train.shape, y_train.shape)
 
 
@@ -84,7 +84,7 @@ print("Generating testing data ...")
 sample = pd.read_csv('sample.csv')
 sample['parcelid'] = sample['ParcelId']
 df_test = sample.merge(df_data, on='parcelid', how='left')
-X_test = df_test[df_train.columns]
+X_test = df_test[columns]
 X_test = X_test.as_matrix()
 result = pd.read_csv('sample.csv')
 
