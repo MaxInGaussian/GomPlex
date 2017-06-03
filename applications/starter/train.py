@@ -40,7 +40,7 @@ for col in cnt_cols+yr_cols:
 prop[yr_cols] = prop[yr_cols].fillna(value=0)
 df_data = pd.get_dummies(prop[filter_cols])
 
-prop['taxdelinquencyflag'] = pd.get_dummies(prop['taxdelinquencyflag'])[0]
+prop['taxdelinquencyflag'] = pd.get_dummies(prop['taxdelinquencyflag'])['Y']
 
 cat_cols = [col for col in prop.columns if 'id' in col]
 cat_cols.remove('parcelid')
