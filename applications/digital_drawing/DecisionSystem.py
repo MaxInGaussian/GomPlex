@@ -414,12 +414,12 @@ class DecisionSystem(object):
             if(st >= ed):
                 break
             d_S = list(range(st, ed+1))
-            ax.plot(d_cT[d_S], d_V[d_S], 'k-')
-            ax.scatter(d_cT[st], d_V[st], color='b')
-            ax.scatter(d_cT[ed], d_V[ed], color='r')
+            ax.scatter(d_cT[d_S], d_V[d_S], color='g', s=5)
+            ax.scatter(d_cT[st], d_V[st], color='b', s=20)
+            # ax.scatter(d_cT[ed], d_V[ed], color='r', s=20)
         ax.legend()
         ax.set_xlabel('Drawing Time (s)')
-        ax.set_ylabel('Velocity (cm/s)')
+        ax.set_ylabel('Instantaneous Velocity (cm/s)')
         ax.set_xlim([min(d_cT), max(d_cT)])
         plt.show()
         
@@ -445,12 +445,12 @@ class DecisionSystem(object):
             if(st >= ed):
                 break
             d_S = list(range(st, ed+1))
-            ax.plot(d_cT[d_S], d_DI[d_S], 'k-')
-            ax.scatter(d_cT[st], d_DI[st], color='b')
-            ax.scatter(d_cT[ed], d_DI[ed], color='r')
+            ax.scatter(d_cT[d_S], d_DI[d_S], color='g', s=5)
+            ax.scatter(d_cT[st], d_DI[st], color='b', s=20)
+            # ax.scatter(d_cT[ed], d_DI[ed], color='r', s=20)
         ax.legend()
         ax.set_xlabel('Drawing Time (s)')
-        ax.set_ylabel('Angle (deg)')
+        ax.set_ylabel('Instantaneous Angle (deg)')
         ax.set_xlim([min(d_cT), max(d_cT)])
         plt.show()
         
