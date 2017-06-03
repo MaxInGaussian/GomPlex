@@ -15,7 +15,7 @@ ratio = 0.3
 cv_folds = 3
 score_rerun = 20
 model_path = 'best.pkl'
-plot_error = True
+plot_error = False
 metric = Metric('mae')
 
 train = pd.read_csv('train2016.csv')
