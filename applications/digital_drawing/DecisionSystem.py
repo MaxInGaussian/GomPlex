@@ -41,13 +41,14 @@ class DecisionSystem(object):
         self.metric = Metric(metric)
         self.show_training_drawings = show_training_drawings
         self.show_predicted_drawings = show_predicted_drawings
+        self.avg_V, self.std_V, self.avg_T, self.std_T = {}, {}, {}, {}
     
     def load_drawing_data(self, csv_path):
         self.df_drawing_data = pd.read_csv(csv_path, index_col=0, header=0)
         self.ci = self.df_drawing_data['MoCA Total'] < self.moca_cutoff
-        self.ci_p = self.ci.mean()
+        self.ci_p = 0.145
         self.nci = self.df_drawing_data['MoCA Total'] >= self.moca_cutoff
-        self.nci_p = self.nci.mean()
+        self.nci_p = 1-0.145
         if(self.use_age):
             self.age = self.df_drawing_data['Age']
             self.age_ci = self.age[self.ci]
@@ -94,11 +95,10 @@ class DecisionSystem(object):
         cfs_mat = np.zeros((2, 2))
         cis, pred_cis = [], []
         for subject in subjects:
-            self.df_drawing_data['Age']
-            leave_one_out_subjects = list(set(subjects).difference([subject]))
-            X_train, y_train = self.get_input_output_matrix_by_subjects(
-                leave_one_out_subjects)
-            model.fit(X_train, y_train)
+            # leave_one_out_subjects = list(set(subjects).difference([subject]))
+            # X_train, y_train = self.get_input_output_matrix_by_subjects(
+            #     leave_one_out_subjects)
+            # model.fit(X_train, y_train)
             ci, y, mu_ci, std_ci, mu_nci, std_nci =\
                 self.predict_next_drawing_state(subject, model, reg_meth)
             prob_P_ci = norm.pdf(y.real-mu_ci.real, scale=std_ci[0, 0].real)*\
@@ -280,7 +280,7 @@ class DecisionSystem(object):
         drawing = np.vstack([d_X, d_Y, d_W, d_T]).T
         if(self.centimeter):
             drawing[:, :2] /= self.CENTIMETER_TO_PIXELS
-        input, output = self.get_drawing_input_output_by_XYWT(drawing)
+        input, output = self.get_drawing_input_output_by_XYWT(subject, drawing)
         moca_ci = self.df_drawing_data['MoCA Total'] < self.moca_cutoff
         ci = moca_ci.loc[subject]
         input = np.hstack((ci*np.ones((input.shape[0], 1)), input))
@@ -296,9 +296,13 @@ class DecisionSystem(object):
             input = np.hstack((input, edu_level*np.ones((input.shape[0], 1))))
         return input, output
     
-    def get_drawing_input_output_by_XYWT(self, drawing):
+    def get_drawing_input_output_by_XYWT(self, subject, drawing):
         drawing, d_cL, d_V, d_DI = self.get_drawing_features_by_XYWT(drawing)
         d_X, d_Y, d_W, d_T = drawing.T.tolist()
+        self.avg_V[subject] = np.mean(d_V)
+        self.std_V[subject] = np.std(d_V)
+        self.avg_T[subject] = np.mean(d_T)
+        self.std_T[subject] = np.std(d_T)
         d_cT = np.cumsum(d_T)
         bound_max = d_cT[-1]-np.median(d_T)*self.forecast_step
         bound_min = np.median(d_T)*self.use_past*self.forecast_step
