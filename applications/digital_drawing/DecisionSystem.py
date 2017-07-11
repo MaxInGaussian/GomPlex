@@ -95,10 +95,10 @@ class DecisionSystem(object):
         cfs_mat = np.zeros((2, 2))
         cis, pred_cis = [], []
         for subject in subjects:
-            # leave_one_out_subjects = list(set(subjects).difference([subject]))
-            # X_train, y_train = self.get_input_output_matrix_by_subjects(
-            #     leave_one_out_subjects)
-            # model.fit(X_train, y_train)
+            leave_one_out_subjects = list(set(subjects).difference([subject]))
+            X_train, y_train = self.get_input_output_matrix_by_subjects(
+                leave_one_out_subjects)
+            model.fit(X_train, y_train)
             ci, y, mu_ci, std_ci, mu_nci, std_nci =\
                 self.predict_next_drawing_state(subject, model, reg_meth)
             prob_P_ci = norm.pdf(y.real-mu_ci.real, scale=std_ci[0, 0].real)*\
