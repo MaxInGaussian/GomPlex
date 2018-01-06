@@ -16,7 +16,7 @@ parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
 parser.add_argument('--iter_tol', type=int, default=30)
 parser.add_argument('--diff_tol', type=float, default=1e-5)
 parser.add_argument('--cv_folds', type=int, default=3)
-parser.add_argument('--metric', type=str, default='rmse')
+parser.add_argument('--metric', type=str, default='mse')
 args = parser.parse_args()
 metric = Metric(args.metric)
 iter_tol = args.iter_tol
@@ -52,7 +52,7 @@ while (True):
         iter_tol=iter_tol, diff_tol=diff_tol, cv_folds=cv_folds, plot=False)
     print('  Done.')
     print('# Choosing GomPlex Models')
-    score = gp.get_cv_metric(cv_folds, 'rmse')
+    score = gp.get_cv_metric(cv_folds, 'rmse', True)
     print('  new score = %.8f'%(score))
     if(not os.path.exists(model_path)):
         gp.save(model_path)
@@ -64,7 +64,7 @@ while (True):
         sub.to_csv(str(score)+"_.csv", index=False)
     else:
         best_gp = GomPlex().load(model_path).fit(X_train, y_train)
-        best_score = best_gp.get_cv_metric(cv_folds, 'rmse')
+        best_score = best_gp.get_cv_metric(cv_folds, 'rmse', True)
         print('  best score = %.8f'%(best_score))
         if(score < best_score):
             gp.save(model_path)
