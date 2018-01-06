@@ -50,7 +50,9 @@ for col in cat_cols:
     if(np.unique(prop[col]).shape[0]<50):
         filter_cat_cols.append(col)
         prop[col] = prop[col].astype('category')
-df_data = pd.concat([df_data, pd.get_dummies(prop[filter_cat_cols])], axis=1)
+cat_data = pd.get_dummies(prop[filter_cat_cols])
+
+df_data = pd.concat([df_data, ], axis=1)
 
 num_cols = [col for col in prop.columns if col not in cat_cols+filter_cols]
 df_data = pd.concat([df_data, prop[num_cols]], axis=1)

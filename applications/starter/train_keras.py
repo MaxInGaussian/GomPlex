@@ -63,8 +63,8 @@ print('Generating training data ...')
 df_train = train.merge(df_data, how='left', on='parcelid')
 y_train = df_train['logerror'].values
 y_train = np.sign(y_train)*(np.abs(y_train)**p)
-y_train = np.hstack(np.maximum(0, y_train)[:, None],
-    np.maximum(0, -y_train)[:, None])
+y_train = np.hstack((np.maximum(0, y_train)[:, None],
+    np.maximum(0, -y_train)[:, None]))
 X_train = df_train.drop(['parcelid', 'logerror', 'transactiondate', 'propertyzoningdesc', 'propertycountylandusecode', 'censustractandblock',
 'rawcensustractandblock'], axis=1)
 columns = X_train.columns
