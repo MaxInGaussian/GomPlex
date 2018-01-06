@@ -14,8 +14,8 @@ model_path = 'best.pkl'
 
 parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
 parser.add_argument('--iter_tol', type=int, default=30)
-parser.add_argument('--diff_tol', type=float, default=1e-5)
-parser.add_argument('--cv_folds', type=int, default=3)
+parser.add_argument('--diff_tol', type=float, default=1e-4)
+parser.add_argument('--cv_folds', type=int, default=2)
 parser.add_argument('--metric', type=str, default='mse')
 args = parser.parse_args()
 metric = Metric(args.metric)
@@ -82,12 +82,5 @@ while (True):
             sub["formation_energy_ev_natom"] = np.exp(y_pred.real)-1
             sub["bandgap_energy_ev"] = np.exp(y_pred.imag)-1
             sub.to_csv(str(score)+"_.csv", index=False)
-            
-
-
-
-
-
-
 
 
