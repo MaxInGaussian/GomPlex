@@ -15,7 +15,7 @@ model_path = 'best.pkl'
 parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
 parser.add_argument('--iter_tol', type=int, default=30)
 parser.add_argument('--diff_tol', type=float, default=1e-4)
-parser.add_argument('--cv_folds', type=int, default=2)
+parser.add_argument('--cv_folds', type=int, default=4)
 parser.add_argument('--metric', type=str, default='mse')
 args = parser.parse_args()
 metric = Metric(args.metric)
@@ -53,15 +53,18 @@ while (True):
     print('  Done.')
     print('# Choosing GomPlex Models')
     score = gp.get_cv_metric(cv_folds, 'rmse', True)
-    print('  new score = %.8f'%(score))
+    print('  new score = %.8f'%(score))    
+    print("Start prediction ...")
+    y_pred = gp.predict(X_test)[0].ravel()
+    
+    print("Start write result ...")
+    sub = pd.DataFrame()
+    sub["id"] = id_test
+    sub["formation_energy_ev_natom"] = np.exp(y_pred.real)-1
+    sub["bandgap_energy_ev"] = np.exp(y_pred.imag)-1
+    sub.to_csv("%.6f.csv"%(score), index=False)
     if(not os.path.exists(model_path)):
         gp.save(model_path)
-        y_pred = gp.predict(X_test)[0].ravel()
-        sub = pd.DataFrame()
-        sub["id"] = id_test
-        sub["formation_energy_ev_natom"] = np.exp(y_pred.real)-1
-        sub["bandgap_energy_ev"] = np.exp(y_pred.imag)-1
-        sub.to_csv(str(score)+"_.csv", index=False)
     else:
         best_gp = GomPlex().load(model_path).fit(X_train, y_train)
         best_score = best_gp.get_cv_metric(cv_folds, 'rmse', True)
@@ -73,14 +76,5 @@ while (True):
             best_gp.save(backup_path)
             print('  Found New Model!')
     
-            print("Start prediction ...")
-            y_pred = gp.predict(X_test)[0].ravel()
-            
-            print("Start write result ...")
-            sub = pd.DataFrame()
-            sub["id"] = id_test
-            sub["formation_energy_ev_natom"] = np.exp(y_pred.real)-1
-            sub["bandgap_energy_ev"] = np.exp(y_pred.imag)-1
-            sub.to_csv(str(score)+"_.csv", index=False)
 
 
