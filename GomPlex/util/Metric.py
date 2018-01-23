@@ -13,6 +13,7 @@ class Metric(object):
     
     metrics = [
         "mse",
+        "rmse",
         "nmse",
         "mae",
         "nlpd",
@@ -33,6 +34,11 @@ class Metric(object):
         mse_real = np.mean(np.real(target-mu_pred)**2)
         mse_imag = np.mean(np.imag(target-mu_pred)**2)
         return mse_real/2+mse_imag/2
+
+    def rmse(self, target, mu_pred, std_pred):        
+        mse_real = np.mean(np.real(target-mu_pred)**2)
+        mse_imag = np.mean(np.imag(target-mu_pred)**2)
+        return (mse_real/2+mse_imag/2)**0.5
 
     def nmse(self, target, mu_pred, std_pred):
         mse_real = np.mean(np.real(target-mu_pred)**2)

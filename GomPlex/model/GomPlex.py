@@ -114,7 +114,7 @@ class GomPlex(object):
     def get_cost(self):
         return self.get_cv_metric(self.cv_folds, self.cost_type)
 
-    def get_cv_metric(self, n_folds, metric):
+    def get_cv_metric(self, n_folds, metric, scaled=False):
         cv_metric = Metric(metric, self)
         cv_results = []
         data = np.hstack((self.X.copy(), self.y.copy()))
@@ -124,17 +124,23 @@ class GomPlex(object):
                 st_ind, ed_ind = fold_size*i, min(fold_size*(i+1), data.shape[0])
                 cv_X = data[st_ind:ed_ind, :-1]
                 cv_y = data[st_ind:ed_ind, -1][:, None]
+                if(scaled):
+                    cv_y = self.y_scaler.eval(cv_y, inv=True)
                 self.X = np.vstack((data[:st_ind, :-1], data[ed_ind:, :-1]))
                 self.y = np.hstack((data[:st_ind, -1], data[ed_ind:, -1]))[:, None]
                 self.train()
                 cv_results.append(self.N*cv_metric.eval(
-                    cv_y, *self.predict(cv_X, scaled=False)))
+                    cv_y, *self.predict(cv_X, scaled=scaled)))
             self.X, self.y = data[:, :-1], data[:, -1][:, None]
             self.train()
         else:
             self.train()
-            cv_results.append(self.N*cv_metric.eval(
-                self.y, *self.predict(self.X, scaled=False)))
+            if(scaled):
+                cv_y = self.y_scaler.eval(self.y, inv=True)
+            else:
+                cv_y = self.y
+            cv_results = [self.N*cv_metric.eval(
+                cv_y, *self.predict(self.X, scaled=scaled))]
         return np.sum(cv_results)/data.shape[0]
 
     def get_cost_grad(self):
