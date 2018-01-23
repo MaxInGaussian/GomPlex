@@ -86,21 +86,27 @@ class DecisionSystem(object):
         if(reg_meth == 'GomPlex'):
             return GomPlex().load(model_path)
     
-    def eval_features_for_subjects(self, model=None, reg_meth='GomPlex'):
+    def eval_model_for_subjects(self, model=None, n_trains=100, reg_meth='GomPlex'):
         echo_message = False
         if(model is None):
             echo_message = True
             model = self.load_regression(reg_meth)
         subjects = self.df_drawing_data.index
         cfs_mat = np.zeros((2, 2))
-        cis, pred_cis = [], []
+        cis, pred_cis, gender, age, edu_lv = [], [], [], [], []
+        train_subjects = np.random.choice(
+            self.df_drawing_data.index[self.ci].tolist(), n_trains//2).tolist()
+        train_subjects += np.random.choice(
+            self.df_drawing_data.index[self.nci].tolist(), n_trains//2).tolist()
+        X_train, y_train = self.get_input_output_matrix_by_subjects(
+            train_subjects)
+        model.fit(X_train, y_train)
+        test_subjects = list(set(subjects).difference(train_subjects))
         for subject in subjects:
-            leave_one_out_subjects = list(set(subjects).difference([subject]))
-            X_train, y_train = self.get_input_output_matrix_by_subjects(
-                leave_one_out_subjects)
-            model.fit(X_train, y_train)
-            ci, y, mu_ci, std_ci, mu_nci, std_nci =\
-                self.predict_next_drawing_state(subject, model, reg_meth)
+            res = self.predict_next_drawing_state(subject, model, reg_meth)
+            if(res is None):
+                continue
+            ci, y, mu_ci, std_ci, mu_nci, std_nci = res
             prob_P_ci = norm.pdf(y.real-mu_ci.real, scale=std_ci[0, 0].real)*\
                 norm.pdf(y.imag-mu_ci.imag, scale=std_ci[0, 0].imag)
             prob_P_nci = norm.pdf(y.real-mu_nci.real, scale=std_nci[0, 0].real)*\
@@ -141,6 +147,87 @@ class DecisionSystem(object):
                 np.sum(cfs_mat[0]) == 0 else\
                     cfs_mat[0, 0]/np.sum(cfs_mat[0])/2+\
                         cfs_mat[1, 1]/np.sum(cfs_mat[1])/2
+            if(np.isnan(pred_ci)):
+                continue
+            cis.append(ci)
+            pred_cis.append(pred_ci)
+            age.append(self.age[subject])
+            gender.append(self.male[subject])
+            edu_lv.append(self.edu_levels[subject])
+            if(echo_message):
+                print('  (%d|%.3f), F1=%.3f, recall=%.3f, specificity=%.3f'%(
+                    ci, pred_ci, F1, recall, specificity))
+                print('             TP=%d, FN=%d, FP=%d, TN=%d'%(
+                    cfs_mat[0, 0], cfs_mat[0, 1], cfs_mat[1, 0], cfs_mat[1, 1]))
+        fpr, tpr, thresholds = roc_curve(cis, pred_cis)
+        AUC = auc(fpr, tpr)
+        if(echo_message):
+            return AUC, F1, cfs_mat, cis, pred_cis, age, gender, edu_lv
+        return AUC, F1, cfs_mat
+        
+    def eval_model_for_subgroups(self, model=None, n_trains=100, reg_meth='GomPlex'):
+        echo_message = False
+        if(model is None):
+            echo_message = True
+            model = self.load_regression(reg_meth)
+        subjects = self.df_drawing_data.index
+        cfs_mat = np.zeros((2, 2))
+        cis, pred_cis = [], []
+        train_subjects = np.random.choice(
+            self.df_drawing_data.index[self.ci].tolist(), n_trains//2).tolist()
+        train_subjects += np.random.choice(
+            self.df_drawing_data.index[self.nci].tolist(), n_trains//2).tolist()
+        X_train, y_train = self.get_input_output_matrix_by_subjects(
+            train_subjects)
+        model.fit(X_train, y_train)
+        test_subjects = list(set(subjects).difference(train_subjects))
+        for subject in subjects:
+            res = self.predict_next_drawing_state(subject, model, reg_meth)
+            if(res is None):
+                continue
+            ci, y, mu_ci, std_ci, mu_nci, std_nci = res
+            prob_P_ci = norm.pdf(y.real-mu_ci.real, scale=std_ci[0, 0].real)*\
+                norm.pdf(y.imag-mu_ci.imag, scale=std_ci[0, 0].imag)
+            prob_P_nci = norm.pdf(y.real-mu_nci.real, scale=std_nci[0, 0].real)*\
+                norm.pdf(y.imag-mu_nci.imag, scale=std_nci[0, 0].imag)
+            joint_U_ci, joint_U_nci = self.ci_p, self.nci_p
+            if(self.use_age):
+                joint_U_ci *= self.age_ci_rv.pdf(self.age[subject])
+                joint_U_nci *= self.age_nci_rv.pdf(self.age[subject])
+            if(self.use_gender):
+                joint_U_ci *= self.male_ci_p if\
+                    self.male[subject]==1 else 1-self.male_ci_p
+                joint_U_nci *= self.male_nci_p if\
+                    self.male[subject]==1 else 1-self.male_nci_p
+            if(self.use_edu_level):
+                joint_U_ci *= self.edu_level_ci_p[self.edu_levels[subject]]
+                joint_U_nci *= self.edu_level_nci_p[self.edu_levels[subject]]
+            pred_ci = joint_U_ci*np.product(prob_P_ci)/(
+                joint_U_ci*np.product(prob_P_ci)+\
+                    joint_U_nci*np.product(prob_P_nci))
+            if(pred_ci >= 0.5 and ci == 1):
+                cfs_mat[0, 0] += 1
+            elif(pred_ci < 0.5 and ci == 1):
+                cfs_mat[0, 1] += 1
+            elif(pred_ci >= 0.5 and ci == 0):
+                cfs_mat[1, 0] += 1
+            elif(pred_ci < 0.5 and ci == 0):
+                cfs_mat[1, 1] += 1
+            accuracy = (cfs_mat[0, 0]+cfs_mat[1, 1])/np.sum(cfs_mat)
+            precision = 0 if np.sum(cfs_mat[:, 0]) == 0 else\
+                cfs_mat[0, 0]/np.sum(cfs_mat[:, 0])
+            recall = 0 if np.sum(cfs_mat[0]) == 0 else\
+                cfs_mat[0, 0]/np.sum(cfs_mat[0])
+            specificity = 0 if np.sum(cfs_mat[1]) == 0 else\
+                cfs_mat[1, 1]/np.sum(cfs_mat[1])
+            F1 = 0 if precision+recall == 0 else\
+                2*(precision*recall)/(precision+recall)
+            adj_accuracy = 0 if np.sum(cfs_mat[1]) == 0 or\
+                np.sum(cfs_mat[0]) == 0 else\
+                    cfs_mat[0, 0]/np.sum(cfs_mat[0])/2+\
+                        cfs_mat[1, 1]/np.sum(cfs_mat[1])/2
+            if(np.isnan(pred_ci)):
+                continue
             cis.append(ci)
             pred_cis.append(pred_ci)
             if(echo_message):
@@ -151,23 +238,17 @@ class DecisionSystem(object):
         fpr, tpr, thresholds = roc_curve(cis, pred_cis)
         AUC = auc(fpr, tpr)
         if(echo_message):
-            print(model.hashed_name)
-            plt.plot(fpr, tpr, label='ROC curve (AUC = %0.3f)' % AUC)
-            plt.plot([0, 1], [0, 1], 'k--')
-            plt.xlim([0, 1])
-            plt.ylim([0, 1])
-            plt.xlabel('False Positive Rate (1 - Specifity)')
-            plt.ylabel('True Positive Rate (Sensitivity)')
-            plt.title('Receiver Operating Characteristic')
-            plt.legend(loc="lower right")
-            plt.show()
             return AUC, F1, cfs_mat, cis, pred_cis
         return AUC, F1, cfs_mat
     
     def predict_next_drawing_state(self, subject, model=None, reg_meth='GomPlex'):
         if(model is None):
             model = self.load_regression(reg_meth)
-        X, y = self.get_input_output_matrix_by_subject(subject)
+        try:
+            X, y = self.get_input_output_matrix_by_subject(subject)
+        except:
+            print(subject)
+            return None
         X_ci, X_nci = X.copy(), X.copy()
         X_ci[:, 0], X_nci[:, 0] = 1, 0
         mu_ci, std_ci = model.predict(X_ci)
@@ -204,18 +285,18 @@ class DecisionSystem(object):
                 cv_folds=cv_folds, plot=plot_error)
             print('  Done.')
             print('# Choosing GomPlex Models')
-            score = self.eval_features_for_subjects(model=gp)[0]
+            score = self.eval_model_for_subjects(model=gp)[0]
             print('  new score = %.3f'%(score))
             model_path = self.get_regressor_path(reg_meth)
             if(not os.path.exists(model_path)):
                 gp.save(model_path)
             else:
                 best_gp = GomPlex().load(model_path).fit(X_train, y_train)
-                best_score = self.eval_features_for_subjects(model=best_gp)[0]
+                best_score = self.eval_model_for_subjects(model=best_gp)[0]
                 print('  best score = %.3f'%(best_score))
                 if(score > best_score):
                     gp.save(model_path)
-                    cfs_mat = self.eval_features_for_subjects(model=gp)[-1]
+                    cfs_mat = self.eval_model_for_subjects(model=gp)[-1]
                     backup_path = 'save_models/'+model_path[:-4]
                     backup_path += '_%s_%d_%d_%d_%d.pkl'%(
                         gp.hashed_name, cfs_mat[0, 0], cfs_mat[0, 1],
@@ -259,7 +340,14 @@ class DecisionSystem(object):
     def get_input_output_matrix_by_subjects(self, subjects):
         input_mat, output_mat = None, None
         for subject in subjects:
-            input, output = self.get_input_output_matrix_by_subject(subject)
+            try:
+                input, output = self.get_input_output_matrix_by_subject(subject)
+            except:
+                print(subject)
+                continue
+            if(np.any(np.isnan(input))):
+                print(subject)
+                continue
             if(input is None and output is None):
                 continue
             if(input_mat is None and output_mat is None):
@@ -272,11 +360,20 @@ class DecisionSystem(object):
     
     def get_input_output_matrix_by_subject(self, subject):
         decode = lambda str: np.array(list(map(float, str.split('|'))))
-        d_X = decode(self.df_drawing_data['X'][subject])
+        try:
+            d_X = decode(self.df_drawing_data['X'][subject])
+        except:
+            print(subject)
+            print(self.df_drawing_data['X'][subject])
+            print(self.df_drawing_data['Y'][subject])
         d_Y = decode(self.df_drawing_data['Y'][subject])
         d_W = decode(self.df_drawing_data['W'][subject])
         d_W[-1] = 0
         d_T = decode(self.df_drawing_data['T'][subject])/1000
+        min_len = np.min([len(d_X), len(d_Y), len(d_W), len(d_T)])
+        d_X, d_Y, d_W, d_T = d_X[:min_len], d_Y[:min_len], d_W[:min_len], d_T[:min_len]
+        if(d_T[0] == 0):
+            d_T=d_T[1:]
         drawing = np.vstack([d_X, d_Y, d_W, d_T]).T
         if(self.centimeter):
             drawing[:, :2] /= self.CENTIMETER_TO_PIXELS

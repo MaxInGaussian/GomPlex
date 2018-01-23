@@ -7,7 +7,7 @@ import sys
 
 from DecisionSystem import DecisionSystem
 
-DRAWING_RAW_DATA_PATH = 'drawing_raw_data.csv'
+DRAWING_RAW_DATA_PATH = 'data/drawing_raw_data.csv'
 
 def nonstop_train():
     model = DecisionSystem(sample_time=50, use_past=4,
