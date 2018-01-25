@@ -24,14 +24,15 @@ class DecisionSystem(object):
     df_drawing_data, complex_regressor = None, None
     CENTIMETER_TO_PIXELS = 62.992126
     
-    def __init__(self, moca_cutoff=21, sample_time=100, use_past=10,
-        use_gender=True, use_age=True, use_edu_level=True,
+    def __init__(self, moca_cutoff=22, sample_time=100, use_past=10,
+        use_doctor_diag=True, use_gender=True, use_age=True, use_edu_level=True,
         stroke_size_tol=10, stroke_length_tol=1, centimeter=True, metric='nmse',
         show_training_drawings=False, show_predicted_drawings=False):
         self.moca_cutoff = moca_cutoff
         self.centimeter = centimeter
         self.sample_time = sample_time
         self.use_gender = use_gender
+        self.use_doctor_diag = use_doctor_diag
         self.use_age = use_age
         self.use_edu_level = use_edu_level
         self.stroke_size_tol = stroke_size_tol
@@ -44,10 +45,16 @@ class DecisionSystem(object):
         self.avg_V, self.std_V, self.avg_T, self.std_T = {}, {}, {}, {}
     
     def load_drawing_data(self, csv_path):
-        self.df_drawing_data = pd.read_csv(csv_path, index_col=0, header=0)
-        self.ci = self.df_drawing_data['MoCA Total'] < self.moca_cutoff
+        self.df_drawing_data = pd.read_csv(csv_path, index_col=0, header=0).reset_index()
+        if(self.use_doctor_diag):
+            self.ci = np.logical_and(self.df_drawing_data['Subject ID'].str.contains("AD"),
+                self.df_drawing_data['MoCA Total'] < self.moca_cutoff)
+            self.nci = self.df_drawing_data['MoCA Total'] >= self.moca_cutoff
+            df_drawing_data = self.df_drawing_data[np.logical_or(self.ci, self.nci)]
+        else:
+            self.ci = self.df_drawing_data['MoCA Total'] < self.moca_cutoff
+            self.nci = self.df_drawing_data['MoCA Total'] >= self.moca_cutoff
         self.ci_p = 0.145
-        self.nci = self.df_drawing_data['MoCA Total'] >= self.moca_cutoff
         self.nci_p = 1-0.145
         if(self.use_age):
             self.age = self.df_drawing_data['Age']
@@ -73,12 +80,8 @@ class DecisionSystem(object):
     
     def get_regressor_path(self, reg_meth='GomPlex'):
         model_path = reg_meth+"_f%d_p%d_"%(self.forecast_step, self.use_past)
-        if(self.use_gender):
-            model_path += "g"
-        if(self.use_age):
-            model_path += "a"
-        if(self.use_edu_level):
-            model_path += "e"
+        if(self.use_doctor_diag):
+            model_path += "diag"
         return model_path+".pkl"
     
     def load_regression(self, reg_meth='GomPlex'):

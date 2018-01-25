@@ -44,9 +44,10 @@ def get_eval_from_fpr_tpr(fpr, tpr):
     print("F1 Score =", F1)
     return sensitivity, specificity, accuracy, precision, F1
 
-trains_nums = [30*(i+1) for i in range(10)]
+trains_nums = [200] #[30*(i+1) for i in range(10)]
 performance_log = []
 plt.figure()
+plt.show()
 for n_trains in trains_nums:
     AUC, F1, cfs_mat, cis, pred_cis, age, gender, edu_lv =\
         model.eval_model_for_subjects(n_trains=n_trains)
@@ -66,7 +67,6 @@ plt.ylabel('True Positive Rate (Sensitivity)')
 plt.title('Receiver Operating Characteristic')
 plt.legend(loc="lower right")
 plt.tight_layout()
-plt.show()
 
 def plot_confusion_matrix(cm, classes):
     normalize=False

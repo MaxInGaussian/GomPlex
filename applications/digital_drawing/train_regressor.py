@@ -11,7 +11,7 @@ DRAWING_RAW_DATA_PATH = 'data/drawing_raw_data.csv'
 
 def nonstop_train():
     model = DecisionSystem(sample_time=50, use_past=4,
-        use_gender=True, use_age=True, use_edu_level=True,
+        use_doctor_diag=True, use_gender=True, use_age=True, use_edu_level=True,
         show_training_drawings=False, show_predicted_drawings=False)
     model.load_drawing_data(DRAWING_RAW_DATA_PATH)
     while(True):
