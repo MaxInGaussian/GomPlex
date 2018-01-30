@@ -5,7 +5,7 @@
 
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve, auc
 from sklearn.linear_model import LogisticRegression
 from DecisionSystem import DecisionSystem
@@ -17,10 +17,11 @@ from GomPlex import *
 DRAWING_RAW_DATA_PATH = 'data/drawing_raw_data.csv'
 
 model = DecisionSystem(sample_time=100, use_past=4,
-    use_gender=True, use_age=True, use_edu_level=True,
+    use_doctor_diag=True, use_gender=True, use_age=True, use_edu_level=True,
     show_training_drawings=False, show_predicted_drawings=False)
 model.load_drawing_data(DRAWING_RAW_DATA_PATH)
 num_ci, num_nci = model.ci.sum(), len(model.ci)-model.ci.sum()
+print("%d:%d"%(num_ci, num_nci))
 
 # model.show_velocity_graph('MS0045')
 # model.show_direction_graph('MS0045')
@@ -46,27 +47,28 @@ def get_eval_from_fpr_tpr(fpr, tpr):
 
 trains_nums = [200] #[30*(i+1) for i in range(10)]
 performance_log = []
-plt.figure()
-plt.show()
+#plt.figure()
+#plt.show()
 for n_trains in trains_nums:
     AUC, F1, cfs_mat, cis, pred_cis, age, gender, edu_lv =\
         model.eval_model_for_subjects(n_trains=n_trains)
     fpr, tpr, thresholds = roc_curve(cis, pred_cis)
     AUC = auc(fpr, tpr)
     arg = np.argmax(tpr-fpr)
-    plt.plot(fpr, tpr, linestyle='-', label='GPMC-%d (AUC = %0.3f)' % (n_trains, AUC))
-    plt.scatter(fpr[arg], tpr[arg], s=50, marker='x')
+    #plt.plot(fpr, tpr, linestyle='-', label='GPMC-%d (AUC = %0.3f)' % (n_trains, AUC))
+    #plt.scatter(fpr[arg], tpr[arg], s=50, marker='x')
     print('GPMC-%d:'%(n_trains))
+    print("AUC =", AUC)
     performance_log.append(list(get_eval_from_fpr_tpr(fpr[arg], tpr[arg])))
     performance_log[-1].append(AUC)
-plt.plot([0, 1], [0, 1], 'k-', label='Random Guessing (AUC = 0.5)', alpha=0.3)
-plt.xlim([0, 1])
-plt.ylim([0, 1])
-plt.xlabel('False Positive Rate (1 - Specificity)')
-plt.ylabel('True Positive Rate (Sensitivity)')
-plt.title('Receiver Operating Characteristic')
-plt.legend(loc="lower right")
-plt.tight_layout()
+#plt.plot([0, 1], [0, 1], 'k-', label='Random Guessing (AUC = 0.5)', alpha=0.3)
+#plt.xlim([0, 1])
+#plt.ylim([0, 1])
+#plt.xlabel('False Positive Rate (1 - Specificity)')
+#plt.ylabel('True Positive Rate (Sensitivity)')
+#plt.title('Receiver Operating Characteristic')
+#plt.legend(loc="lower right")
+#plt.tight_layout()
 
 def plot_confusion_matrix(cm, classes):
     normalize=False

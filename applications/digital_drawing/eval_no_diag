@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "evaluate_GPMC.py", line 53, in <module>
+    model.eval_model_for_subjects(n_trains=n_trains)
+  File "/home/maxwylam/GomPlex/applications/digital_drawing/DecisionSystem.py", line 96, in eval_model_for_subjects
+    model = self.load_regression(reg_meth)
+  File "/home/maxwylam/GomPlex/applications/digital_drawing/DecisionSystem.py", line 90, in load_regression
+    return GomPlex().load(model_path)
+  File "../../GomPlex/model/GomPlex.py", line 207, in load
+    with open(path, "rb") as load_f:
+FileNotFoundError: [Errno 2] No such file or directory: 'GomPlex_f10_p4_.pkl'

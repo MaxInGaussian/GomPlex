@@ -49,15 +49,24 @@ class DecisionSystem(object):
         if(self.use_doctor_diag):
             self.ci = np.logical_and(self.df_drawing_data['Subject ID'].str.contains("AD"),
                 self.df_drawing_data['MoCA Total'] < self.moca_cutoff)
-            self.nci = self.df_drawing_data['MoCA Total'] >= self.moca_cutoff
-            df_drawing_data = self.df_drawing_data[np.logical_or(self.ci, self.nci)]
+            self.nci = np.logical_and(self.df_drawing_data['MoCA Total'] >= self.moca_cutoff,
+                                      np.logical_not(self.df_drawing_data['Subject ID'].str.contains("AD")))
+            self.df_drawing_data = self.df_drawing_data[np.logical_or(self.ci, self.nci)]
+            self.ci = np.logical_and(self.df_drawing_data['Subject ID'].str.contains("AD"),
+                self.df_drawing_data['MoCA Total'] < self.moca_cutoff)
+            self.nci = np.logical_and(self.df_drawing_data['MoCA Total'] >= self.moca_cutoff,
+                                      np.logical_not(self.df_drawing_data['Subject ID'].str.contains("AD")))
         else:
             self.ci = self.df_drawing_data['MoCA Total'] < self.moca_cutoff
             self.nci = self.df_drawing_data['MoCA Total'] >= self.moca_cutoff
+        print("N =", self.df_drawing_data.shape)
+        print("CI =", np.sum(self.ci))
+        print("NCI =", np.sum(self.nci))
         self.ci_p = 0.145
         self.nci_p = 1-0.145
         if(self.use_age):
             self.age = self.df_drawing_data['Age']
+            print("Ages mean=%.5f, std=%.5f"%(self.age.mean(), self.age.std()))
             self.age_ci = self.age[self.ci]
             age_ci_mu, age_ci_std = self.age_ci.mean(), self.age_ci.std()
             self.age_ci_rv = norm(loc=age_ci_mu, scale=age_ci_std)
@@ -66,11 +75,14 @@ class DecisionSystem(object):
             self.age_nci_rv = norm(loc=age_nci_mu, scale=age_nci_std)
         if(self.use_gender):
             self.male = self.df_drawing_data['Male']
+            print("Gender male=%.5f, female=%.5f"%(self.male.mean(), 1-self.male.mean()))
             self.male_ci_p = self.male[self.ci].mean()
             self.male_nci_p = self.male[self.nci].mean()
         if(self.use_edu_level):
             edu_cols = ['Uneducated', 'Primary', 'Secondary', 'University']
             edu_levels = self.df_drawing_data[edu_cols]
+            for edu_lv in edu_cols:
+                 print("%s=%.5f"%(edu_lv, edu_levels[edu_lv].mean()))
             self.edu_level_ci_p = edu_levels[self.ci].mean(0)
             self.edu_level_ci_p /= self.edu_level_ci_p.sum()
             self.edu_level_nci_p = edu_levels[self.nci].mean(0)
@@ -79,9 +91,9 @@ class DecisionSystem(object):
         return self
     
     def get_regressor_path(self, reg_meth='GomPlex'):
-        model_path = reg_meth+"_f%d_p%d_"%(self.forecast_step, self.use_past)
+        model_path = reg_meth+"_f%d_p%d"%(self.forecast_step, self.use_past)
         if(self.use_doctor_diag):
-            model_path += "diag"
+            model_path += "_diag"
         return model_path+".pkl"
     
     def load_regression(self, reg_meth='GomPlex'):
