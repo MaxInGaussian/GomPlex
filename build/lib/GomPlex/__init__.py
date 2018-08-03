@@ -3,6 +3,7 @@
 #  Author: Max W. Y. Lam (maxingaussian@gmail.com)
 ################################################################################
 
-numpy
-scipy
-matplotlib
+__version__ = "0.0.9"
+
+from .util import *
+from .model import *

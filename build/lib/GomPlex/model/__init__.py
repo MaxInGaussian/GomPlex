@@ -3,6 +3,8 @@
 #  Author: Max W. Y. Lam (maxingaussian@gmail.com)
 ################################################################################
 
-numpy
-scipy
-matplotlib
+from .GomPlex import GomPlex
+
+__all__ = [
+    'GomPlex'
+]

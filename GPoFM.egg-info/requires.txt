@@ -1,0 +1,3 @@
+numpy
+matplotlib
+tensorflow>=0.10.0
